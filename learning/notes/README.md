@@ -1,0 +1,170 @@
+# 学习笔记索引
+
+> 这是 smolagents 学习过程的所有笔记。
+> 顶层入口：[../LEARNING_PLAN.md](../LEARNING_PLAN.md)（4 周学习计划）
+
+---
+
+## 目录结构
+
+```
+notes/
+├── README.md                          ← 你在这里（索引 + 写作规范）
+├── _template.md                       ← 新建笔记的模板
+├── 01-setup/                          ← 环境、工具、配置
+│   ├── how-to-run.md                  ← 怎么把项目跑起来
+│   ├── vscode-debugging.md            ← VS Code 单步调试指南
+│   └── proxy-issue.md                 ← 国内访问 HF 的代理踩坑
+├── 02-concepts/                       ← 第 1 周：概念笔记
+├── 03-source/                         ← 第 2 周：源码阅读笔记
+├── 04-experiments/                    ← 第 3 周：动手实验记录
+├── 05-advanced/                       ← 第 4 周：进阶专题
+└── questions.md                       ← 悬而未决的问题清单
+```
+
+## 当前已有笔记
+
+### 01-setup 环境与工具
+- [how-to-run.md](01-setup/how-to-run.md) — 项目怎么跑起来（命令行 / CLI / VS Code）
+- [vscode-debugging.md](01-setup/vscode-debugging.md) — VS Code 单步调试 my_first_agent.py
+- [proxy-issue.md](01-setup/proxy-issue.md) — 国内访问 HuggingFace 的代理排查记录
+
+### 02-concepts 概念（第 1 周）
+- [what-is-agent.md](02-concepts/what-is-agent.md) — 什么是 agent？和"调一次 LLM"有什么区别？
+- [codeagent-vs-toolcallingagent.md](02-concepts/codeagent-vs-toolcallingagent.md) — 两种 agent 的对比 + 选型 + 对比 demo
+
+### 待填
+- 02-concepts：ReAct 循环细节
+- 03-source：memory.py / tools.py / models.py / agents.py 阅读心得
+- 04-experiments：自定义 Tool、改造 RAG 例子
+- 05-advanced：多 Agent、MCP 协议、安全沙箱
+
+---
+
+# 学习笔记管理最佳实践
+
+下面这些规范是我建议你遵守的，**为什么**比"是什么"重要：
+
+## 1. 按主题分类，不按日期分类 ⭐
+
+**❌ 反例**：`2026-05-01-学习笔记.md`、`2026-05-02-继续学习.md`
+**✅ 正例**：`agents-react-loop.md`、`tool-design-patterns.md`
+
+**理由**：日期式的文件名 1 个月后你绝对找不到。"那个我写过的关于 ReAct 的笔记在哪？"——按主题命名你能直接搜到。
+
+## 2. 一篇笔记 = 一个独立问题/主题（atomic notes）
+
+每篇笔记**只回答一个问题**，比如：
+- ✅ `how-to-run.md`（只讲怎么跑）
+- ✅ `vscode-debugging.md`（只讲调试）
+- ❌ `setup-and-debug-and-troubleshooting-and-tips.md`（混在一起）
+
+**理由**：小笔记好搜、好链接、好复用。如果一篇笔记里有 5 个完全无关的话题，半年后你只想引用其中 1 个，整篇拷过去就是噪音。
+
+## 3. 文件名规范
+
+- **小写 + 连字符**：`code-agent-flow.md`，**不要**用空格、中文、下划线
+- **能搜到关键词**：从文件名就能猜内容
+- **同主题加前缀分组**：`agent-run-loop.md` / `agent-step.md` / `agent-memory.md`
+
+**理由**：Windows 路径对中文/空格不友好；ripgrep / grep 搜全名比搜模糊关键词快十倍。
+
+## 4. 每篇笔记顶部写元信息（frontmatter）
+
+每篇新笔记开头放一段（参考 [_template.md](_template.md)）：
+
+```yaml
+---
+created: 2026-05-01
+status: drafting | active | done
+tags: [setup, network, proxy]
+---
+```
+
+**理由**：`status` 帮你知道哪些笔记没写完；`tags` 帮你跨目录找相关内容；`created` 知道这条信息有多旧（可能过期）。
+
+## 5. 链接 > 复制
+
+笔记 A 提到了笔记 B 的内容，**链接过去**，不要复制粘贴。
+
+```markdown
+代理配置详见 [proxy-issue.md](proxy-issue.md)。
+```
+
+**理由**：复制粘贴出来的内容会过时——B 改了 A 没同步，你以后会被旧信息坑。链接永远跟随最新版。
+
+## 6. 区分"事实"和"我的理解"
+
+事实容易过期（库版本、API 变化），你的理解（"ReAct 循环本质上是 LLM 在状态机上跑"）一辈子有用。
+
+建议**在笔记里用引用块标记自己的体会**：
+
+```markdown
+`MultiStepAgent.run()` 调用 `_run_stream()`，后者在循环里调用 `_step_stream()`。
+
+> 💡 我的理解：这套设计本质上是把 ReAct 论文里的伪代码翻译成 Python 生成器。
+> 用生成器是为了支持流式输出，不是性能优化。
+```
+
+**理由**：6 个月后你忘了细节，一眼扫过引用块就能想起当时的 insight。
+
+## 7. 维护一个"问题清单"
+
+学到一半看不懂的、卡住的、好奇但暂时不深究的，全部丢进 [questions.md](questions.md)：
+
+```markdown
+- [ ] PlanningStep 是什么时候触发的？看 agents.py:540 没看明白
+- [ ] LiteLLMModel 和 OpenAIModel 实现差异大吗？
+- [x] 为啥 web_search 一直返回空？→ DDG 在代理下不稳，换 SerpAPI 解决
+```
+
+**理由**：学习路上的疑问像 stack，会越积越多；如果不记下来，你会原地反复纠结同一个问题。
+
+## 8. 定期"垃圾回收"
+
+每 2 周翻一遍笔记，问自己 3 个问题：
+
+1. 哪些笔记**过期了**？（依赖了已经改的代码、过时的 API）→ 删掉或更新
+2. 哪些笔记**重复了**？→ 合并
+3. 哪些笔记**永远没看完**？（drafting 状态超过 1 周）→ 决定要么写完，要么删掉，不留半成品
+
+**理由**：笔记系统的天敌是"信息熵增"。半年不清理，你打开 README.md 看到 200 个文件，一个都不想点。
+
+## 9. 善用 git 给笔记做版本
+
+`notes/` 目录跟着仓库一起 git。好处：
+
+- 任何修改都有历史，写错了可以回滚
+- `git log notes/01-setup/how-to-run.md` 能看到这篇笔记的演进
+- 跨设备同步免费
+
+⚠️ 如果你 fork 这个仓库要往 GitHub 推，**笔记会公开**。私密笔记请：
+- 移到独立的私有仓库
+- 或在 `.gitignore` 加 `notes/private/`
+
+## 10. 不要过早组织
+
+刚开始 5 篇笔记，不需要分子目录。等同一类笔记到 5+ 篇再分。
+
+**理由**：过早建目录会强迫你做"这篇该放哪"的决策，分散学习注意力。**先平铺写，等模式自己浮现，再重构**。
+
+> 当前我给你建了 5 个子目录是因为我们已经有学习计划，知道未来 4 周大概会产出哪几类笔记。不是过早组织，是按计划划分。
+
+---
+
+# 写新笔记的流程
+
+1. 复制 [_template.md](_template.md) 改名（`cp _template.md 01-setup/xxx.md`）
+2. 填写 frontmatter（创建日期、状态、tags）
+3. 写内容（标题党：从问题/任务出发，比如"如何 X"、"为什么 Y"）
+4. 写完后**回到这个 README.md，把新笔记加到"当前已有笔记"列表**
+5. 如果新笔记和已有笔记相关，**双向加链接**
+
+---
+
+# 推荐工具
+
+- **VS Code + Markdown 插件**：装 `Markdown All in One`、`Markdown Preview Enhanced`
+- **搜笔记**：直接在 VS Code 里 `Ctrl+Shift+F` 全文搜
+- **画图**：用 Mermaid（GitHub 原生支持），不要外链 draw.io 截图
+- **进阶**：如果笔记超过 50 篇，考虑迁到 Obsidian 或 Logseq（双链笔记，自动反向引用）
