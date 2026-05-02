@@ -31,7 +31,12 @@ notes/
 
 ### 02-concepts 概念（第 1 周）
 - [what-is-agent.md](02-concepts/what-is-agent.md) — 什么是 agent？和"调一次 LLM"有什么区别？
-- [codeagent-vs-toolcallingagent.md](02-concepts/codeagent-vs-toolcallingagent.md) — 两种 agent 的对比 + 选型 + 对比 demo
+- [codeagent-vs-toolcallingagent.md](02-concepts/codeagent-vs-toolcallingagent.md) — 两种 agent 的对比 + 选型 + 对比 demo（含 thinking 模型 + tools 实战坑）
+- [model-and-protocols-overview.md](02-concepts/model-and-protocols-overview.md) — 模型与协议入门，只讲当前阶段需要的
+- [tool-creation-decorator-vs-subclass.md](02-concepts/tool-creation-decorator-vs-subclass.md) — 创建工具：`@tool` vs `Tool` 子类（含决策表 + 重型资源说明）
+
+### 05-advanced 进阶（暂不深究，存档备用）
+- [llm-protocols-deep-dive.md](05-advanced/llm-protocols-deep-dive.md) — LLM 协议家族深入对比 ⏸️ `deferred`，时机到了再读
 
 ### 待填
 - 02-concepts：ReAct 循环细节

@@ -82,9 +82,54 @@
 
 > 每天/每节学完，在这里写一两句话：今天看了什么、卡在哪、有什么疑问。
 
-- [ ] **Week 1 Day 1-2**：概念阅读
-- [ ] **Week 1 Day 3**：跑通豹子 demo
-- [ ] **Week 1 Day 4-5**：Guided Tour
+- [x] **Week 1 Day 1-2**：概念阅读 — intro_agents + ReAct，已产出 [what-is-agent.md](notes/02-concepts/what-is-agent.md)
+- [x] **Week 1 Day 3**：跑通豹子 demo — [my_first_agent.py](scripts/my_first_agent.py)，配套 3 篇环境笔记（运行/调试/代理）
+- [x] **Week 1 Day 4-5**：Guided Tour — 30 分钟扫读 + Tool 子类实操；写了 [compare_agents.py](scripts/compare_agents.py)（实测 ToolCallingAgent 5 步 vs CodeAgent 2 步，答案都是 86°F）
 - [ ] **Week 2**：读源码（memory → tools → models → agents → executor）
 - [ ] **Week 3**：自定义 Tool + 改造一个 example
 - [ ] **Week 4**：多 agent / MCP / 沙箱 / 横向对比
+
+---
+
+## Week 1 学习总结（2026-04-26 ~ 2026-05-02）
+
+> 一句话定调：**用 1 周时间不仅完成"看懂 agent"的入门目标，还实质上预习了 Week 2 的核心机制（ReAct 循环、协议层、工具创建底层），为读源码打下了远超预期的认知基础。**
+
+### 7 条最值得记住的核心洞察
+
+1. **Agent ≠ 调一次 LLM，而是 ReAct 循环**：思考 → 行动 → 观察，反复直到 `final_answer`
+2. **CodeAgent vs ToolCallingAgent 的本质 = 动作格式**（Python 代码 vs JSON tool_calls），分水岭在请求体里有没有 `tools` 字段
+3. **LLM 是无状态的**，"进度感"完全来自每幕重发的 messages 历史 —— `write_memory_to_messages()` 把 `memory.steps` 翻译成 messages 重新喂回
+4. **Chat Completion 协议名字暴露本质**：LLM 永远在做"补全"，messages 数组只是把对话当未完成的剧本让它补完 assistant 的下一句
+5. **Model 类对应的是"调用渠道"，不是"模型"**。同一个 Llama-3.3 可以走 5 种调用方式，选哪个看部署条件
+6. **`@tool` 内部就是动态构造 Tool 子类**，区别只在能不能带 `__init__` 参数和实例状态（`@tool` 是 staticmethod，挂不住资源）
+7. **Prompt caching 缓存的是 KV 不是输出**。因 causal attention，前缀 KV 不依赖后续 token，所以能跨幕复用 —— agent 是最大受益者
+
+### 实战踩坑收获
+
+- **Thinking 模型 + ToolCallingAgent → 400**：thinking 模型常不支持 OpenAI `tools` 字段，换 `Qwen2.5-72B-Instruct` 解决
+- **`len(memory.steps)` 包含 TaskStep**：5 = 1 TaskStep + 4 ActionStep；真正反映 ReAct 轮数的是 ActionStep 数量
+- **`__init__` 只跑一次（实例化时），forward 跑 N 次**（每次 LLM 调用） —— 这是 Tool 子类能预加载重型资源的根本原因
+
+### 笔记产出（5 篇核心 + 1 篇 deferred）
+
+- [02-concepts/what-is-agent.md](notes/02-concepts/what-is-agent.md) — Agent 概念 + ReAct
+- ⭐ [02-concepts/codeagent-vs-toolcallingagent.md](notes/02-concepts/codeagent-vs-toolcallingagent.md) — 8 节，含完整执行剧本 + ReAct 机制 + prompt caching 原理
+- [02-concepts/model-and-protocols-overview.md](notes/02-concepts/model-and-protocols-overview.md) — 7 节，含 Chat Completion 名字溯源 + Model 子类选型决策树
+- [02-concepts/tool-creation-decorator-vs-subclass.md](notes/02-concepts/tool-creation-decorator-vs-subclass.md) — 8 节，含 `__init__` vs `forward` 区分
+- [05-advanced/llm-protocols-deep-dive.md](notes/05-advanced/llm-protocols-deep-dive.md) — `deferred`，协议家族深入对比，时机到了再读
+
+### 已超出原计划
+
+| 原计划要求 | 实际达到 |
+|---|---|
+| 能讲清两种 agent 的区别 | 不仅讲清，还能画每幕 messages 演进、step 计数机制、prompt caching 原理 |
+| 跟 Guided Tour | 30 分钟扫读 + Tool 子类实操（含金量 ≥ 逐例敲）|
+| —（计划没要求） | 协议层完整认知（Chat Completion 来历、Model 子类选型）|
+| —（计划没要求） | 工具机制底层（`@tool` = 动态子类、staticmethod 限制）|
+
+### Week 2 入场提示
+
+按计划顺序读源码：`memory.py → tools.py → models.py → agents.py → local_python_executor.py`。
+
+**预期感受**：会有大量"哦原来如此"的瞬间 —— Week 1 已经把"为什么"想清楚了，Week 2 只剩"怎么写"待补全。**关键方法**：边读边在源码加 `print`/断点，跑 `compare_agents.py` 设断点是最好的源码阅读姿势。
