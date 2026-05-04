@@ -28,21 +28,72 @@
 
 ## 第 2 周：读核心源码（最重要的一周）
 
-**目标**：脑子里能画出 agent 跑一步的完整调用链。
-
-按这个**精确顺序**读，不要乱跳：
-
-1. [src/smolagents/memory.py](../src/smolagents/memory.py)（约 316 行）— 最简单，先读
-2. [src/smolagents/tools.py](../src/smolagents/tools.py) 的 `Tool` 基类部分 — 工具是怎么定义的
-3. [src/smolagents/models.py](../src/smolagents/models.py) 的 `Model` 基类和 `InferenceClientModel` — 其他具体 model 类先跳过
-4. **⭐ [src/smolagents/agents.py](../src/smolagents/agents.py)** — 重点看 `MultiStepAgent.run()` 和 `_step_stream()`，这就是 ReAct 循环的实现
-5. [src/smolagents/local_python_executor.py](../src/smolagents/local_python_executor.py) — 浏览即可，知道它在解析并执行 LLM 输出的 Python 代码
-
-**学习方法**：边读边在源码里加 `print` 或断点，跑一个简单 agent，亲眼看每个变量的内容。**不要纯看代码**。
-
-**本周产出**：能画出
+**本周终极目标**：能默画出这张调用链 ——
 `User 输入 task → memory 加 task → model 生成 → 解析代码 → 执行 → 结果回 memory → 再生成…直到 final_answer`
-这条链路。
+
+每个箭头都能指出对应**哪个文件、哪个函数、哪一行**。
+
+### 6 天阅读路线（从小到大、从外到内）
+
+| 天 | 文件（行数） | 重点范围 | 当日学习目标 |
+|---|---|---|---|
+| **Day 1** | [memory.py](../src/smolagents/memory.py) (316) | 全文 | 理解 agent 记忆数据结构 + `to_messages()` 翻译机制 |
+| **Day 2** | [tools.py](../src/smolagents/tools.py) (1422) | 仅 Tool 基类（约前 400 行） | 理解 Python 函数 → LLM tool schema 的转换 |
+| **Day 3** | [models.py](../src/smolagents/models.py) (2102) | 仅 `Model` 基类 + `InferenceClientModel`（约 600 行） | 理解 LLM 请求体的拼装过程 |
+| **Day 4** | [agents.py](../src/smolagents/agents.py) (1814) **上半** | `MultiStepAgent.__init__` + `run()` | 理解外层 ReAct 循环的控制流 |
+| **Day 5** | [agents.py](../src/smolagents/agents.py) **下半** ⭐ | `_step_stream()` + 两个子类实现 | 理解一步内部完整发生了什么 —— 仓库的"心脏" |
+| **Day 6** | [local_python_executor.py](../src/smolagents/local_python_executor.py) (1768) | 浏览即可 | 高层理解 Python 代码安全执行流程 |
+| **Day 7** | — | 综合产出 | 串成调用链图 + 写 Week 2 总结 |
+
+### 每日验收标准（学完应能）
+
+**Day 1 · memory.py**
+- 默画 7 个 Step 类的关系（`MemoryStep` 基类 → 6 个子类）
+- 解释 `ActionStep.to_messages()` 如何把一轮"思考-行动-观察"拆成 3-4 条 ChatMessage
+- 看到 `agent.memory.steps[2]` 的内容，能预测下一次 `model.generate()` 收到的 messages
+
+**Day 2 · tools.py**
+- 解释 `Tool.__init_subclass__` 在 import 阶段做了什么校验
+- 区分 `forward()`（业务逻辑） vs `__call__()`（框架包装）
+- trace 一个 tool 函数 → JSON schema → HTTP 请求体 `tools` 字段的完整路径
+
+**Day 3 · models.py**
+- 说清 `Model.generate()` 的入参 / 返回结构
+- 亲眼看到一次真实请求的 JSON body，并指出每个字段来自 memory 的哪个 step
+
+**Day 4 · agents.py 上半**
+- 默写 `run()` 的伪代码（while 循环 + max_steps + callback + error 捕获）
+- 解释 `agent.run()` 的 `stream=True` 区别
+- 在 `run()` 设断点跟一个完整 task
+
+**Day 5 · agents.py 下半 ⭐**
+- 默写 `_step_stream()` 的伪代码（write_memory_to_messages → model.generate → 解析输出 → 执行 → 写回 memory → yield）
+- 对比 CodeAgent vs ToolCallingAgent 在"解析输出"和"执行动作"两环节的代码差异
+- 拿 [compare_agents.py](scripts/compare_agents.py) 单步走，每个分歧点都知道源码位置
+
+**Day 6 · local_python_executor.py**
+- 说出大致流程：字符串 → AST 解析 → 白名单检查 → 受控执行
+- 解释为什么 CodeAgent 不会让 LLM 删你硬盘
+
+**Day 7 · 综合**
+- 在本文件写出 Week 2 总结（参考 Week 1 格式：核心洞察 + 踩坑 + 笔记产出）
+- 给 Week 3 选定具体题目
+
+### 学习目标的 3 个层次（每天自检）
+
+| 层次 | 问题 | 通过标准 |
+|---|---|---|
+| 1. 看懂 | "这段代码做了什么？" | 一句话概括函数功能 |
+| 2. 看透 | "为什么这样写？" | 想到一个替代设计并说出 trade-off |
+| 3. 看会 | "让我改/扩展，能动手吗？" | 心里能写出修改方案 |
+
+Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即可。
+
+### 学习方法 & 避坑
+
+- **不要纯看代码** —— 边读边在源码加 `print` 或断点，跑 [compare_agents.py](scripts/compare_agents.py) 设断点是最佳姿势
+- Day 2-3 **故意只读一部分**：tools.py 后半全是各种第三方集成（HF Hub、MCP、Gradio），models.py 后半是各种供应商封装（OpenAI、LiteLLM、Bedrock），第一遍跳过，需要时再回查
+- Day 5 是难点高峰：`_step_stream()` 是生成器（yield），如果 Python 生成器不熟，单独花时间补一下
 
 ---
 
@@ -85,7 +136,14 @@
 - [x] **Week 1 Day 1-2**：概念阅读 — intro_agents + ReAct，已产出 [what-is-agent.md](notes/02-concepts/what-is-agent.md)
 - [x] **Week 1 Day 3**：跑通豹子 demo — [my_first_agent.py](scripts/my_first_agent.py)，配套 3 篇环境笔记（运行/调试/代理）
 - [x] **Week 1 Day 4-5**：Guided Tour — 30 分钟扫读 + Tool 子类实操；写了 [compare_agents.py](scripts/compare_agents.py)（实测 ToolCallingAgent 5 步 vs CodeAgent 2 步，答案都是 86°F）
-- [ ] **Week 2**：读源码（memory → tools → models → agents → executor）
+- **Week 2**（按天打勾）：
+  - [x] **Day 1**：[memory.py](../src/smolagents/memory.py) ✅ 全部 316 行读完 —— 详见下方 [Week 2 Day 1 学习总结](#week-2--day-1-学习总结2026-05-02--2026-05-03)（10 篇笔记 + 1 个实验）
+  - [ ] Day 2：[tools.py](../src/smolagents/tools.py) 基类（Python 函数 → tool schema）
+  - [ ] Day 3：[models.py](../src/smolagents/models.py) 基类 + InferenceClientModel（请求体拼装）
+  - [ ] Day 4：[agents.py](../src/smolagents/agents.py) 上半（`MultiStepAgent.run()` 外循环）
+  - [ ] Day 5：[agents.py](../src/smolagents/agents.py) 下半 ⭐（`_step_stream()` 心脏）
+  - [ ] Day 6：[local_python_executor.py](../src/smolagents/local_python_executor.py)（浏览）
+  - [ ] Day 7：综合 —— 调用链图 + Week 2 总结
 - [ ] **Week 3**：自定义 Tool + 改造一个 example
 - [ ] **Week 4**：多 agent / MCP / 沙箱 / 横向对比
 
@@ -133,3 +191,91 @@
 按计划顺序读源码：`memory.py → tools.py → models.py → agents.py → local_python_executor.py`。
 
 **预期感受**：会有大量"哦原来如此"的瞬间 —— Week 1 已经把"为什么"想清楚了，Week 2 只剩"怎么写"待补全。**关键方法**：边读边在源码加 `print`/断点，跑 `compare_agents.py` 设断点是最好的源码阅读姿势。
+
+---
+
+## Week 2 Day 1 学习总结（2026-05-02 ~ 2026-05-03）
+
+> **一句话定调**：用 Day 1 一天时间读完 [memory.py](../src/smolagents/memory.py) 全部 316 行，并借机补齐 3 篇 Python 中级语法预习（`@dataclass` / 迭代协议 / `yield`），通过 [planning_demo.py](scripts/planning_demo.py) 实证验证 PlanningStep 重规划机制 —— 为 Day 2-7 读 1400+ 行源码扫清基础障碍。
+
+### 7 条最值得记住的源码侧核心洞察
+
+1. **多态契约**：每个 Step 子类必须实现 `to_messages()`，是 Week 1 "messages 重发机制"的实现侧。基类用 `raise NotImplementedError` 强制约束（不用 `abc.ABC` 是因为和 `@dataclass` 元类冲突）
+2. **Plan 是 hint 不是 state**：未执行的 plan 项不被框架追踪，靠 LLM 从 observation 自行推理 —— 实验里 Updated Plan 4 步 vs Initial 6 步证实
+3. **Role 是 LLM 行为的方向盘**：伪造 user 消息（"Now proceed"）制造 role 切换，让 LLM 不卡在 plan 模式 —— role 标记不是 metadata，是 chat template 里的特殊 token
+4. **Prompt 工程是双向控制**：YAML 模板规定结构（Updated Plan 4 段子标题严格来自 [toolcalling_agent.yaml:184-188](../src/smolagents/prompts/toolcalling_agent.yaml:184)）+ stop_sequences (`<end_plan>`) 强制截断 LLM 跑题
+5. **`summary_mode` 隐藏"想法"保留"事实"**：PlanningStep 全隐身（`return []`）、ActionStep 只藏 `model_output`（其他 4 分支照常输出），让重 plan 永远基于 observation 而非旧想法
+6. **持久化通道 vs 事件通道**：memory.steps 走持久化（喂 LLM + replay）、FinalAnswerStep 走 generator yield 事件（不存）。两条通道独立设计，是 smolagents 核心哲学
+7. **MRO walk + Observer 模式**：CallbackRegistry 一行 `for cls in __mro__` 让"基类注册 = 监听所有子类"。这是 smolagents 主要扩展点，Django signals / PyTorch hooks / HF callbacks 都是同一模式
+
+### 3 条 Python 基础认知（意外之得）
+
+8. **Python 没有"字段声明"语法**：实例属性是 `self.x = ...` 赋值时凭空冒出来的；`@dataclass` 是**代码生成器**（自动写 `__init__` 里的 `self.x = x` 赋值）
+9. **Iterable ≠ Iterator**：list 是 iterable 不是 iterator（`next([1,2,3])` 报错）；generator 是少数自身就是 iterator 的对象（`iter(g) is g`）
+10. **`yield` = 可暂停的 `return`**：函数遇到 yield 暂停吐值，下次被 next 时从暂停处继续 —— 让 smolagents 长 ReAct 循环能被实时消费
+
+### 实战踩坑收获
+
+- **planning_demo.py 三个核心预测全验证 + 4 个彩蛋**：触发位置符合 `step_number=1, 1+N, 1+2N` 公式；`summary_mode=True` 让 PlanningStep 返回空消息；Updated Plan 自动剔除已完成步骤；`<end_plan>` 是 prompt 协议 + stop_sequences 双保险
+- **修正自己的错误**："CodeAgent 的 tool_calls 通常 None" 是错的 —— CodeAgent 也填 tool_calls，但是合成的 `ToolCall(name="python_interpreter", arguments=<code>)`（让两种 agent 的 replay/log 机制统一）
+- **prompt 模板"填空机"实证**：Updated Plan 里的 "Facts that we have learned" 4 段结构**严格来自 YAML 模板硬规定**，不是 LLM 自由发挥 —— LLM 在 prompt 工程里其实是填空机
+- **`is_final_answer=True` 的 ActionStep 仍会被 to_messages 翻译**（在 multi-agent / 跨 run 记忆 / 同 agent 复用 3 种场景）。`is_final_answer` 只用来让 while 循环退出
+
+### 笔记产出（10 篇 + 1 实验）
+
+**Python 预习系列（3 篇）**：
+- [python-class-and-dataclass.md](notes/03-source/python-class-and-dataclass.md) — `@dataclass` / `self` / 抽象方法 / "Python 没有字段声明"
+- [python-iterables-iterators.md](notes/03-source/python-iterables-iterators.md) — 迭代协议、`iter()` / `next()` 关系、自定义类怎么实现
+- [python-generators-yield.md](notes/03-source/python-generators-yield.md) — `yield` 暂停-恢复模型、`Generator[X]` 注解
+
+**memory.py 源码系列（6 篇）**：
+- [memory-data-structures.md](notes/03-source/memory-data-structures.md) — 鸟瞰 + Step 家族 4 个简单类
+- [planning-mechanics.md](notes/03-source/planning-mechanics.md) — PlanningStep 全机制 + 4 个遗留问题已解答
+- ⭐ [action-step-anatomy.md](notes/03-source/action-step-anatomy.md) — ActionStep 13 字段 + 5 分支 to_messages
+- ⭐ [final-answer-step.md](notes/03-source/final-answer-step.md) — 事件 vs 记录 + Day 1 全图谱
+- [agent-memory-container.md](notes/03-source/agent-memory-container.md) — AgentMemory 5 方法 + reset 设计
+- [callback-registry.md](notes/03-source/callback-registry.md) — Observer 模式 + MRO walk
+
+**通用概念（1 篇）**：
+- [chat-message-roles.md](notes/02-concepts/chat-message-roles.md) — role 标记的 LLM 训练原理
+
+**实验脚本（1 个）**：
+- [planning_demo.py](scripts/planning_demo.py) — 周期性重规划实证
+
+### 已超出原计划
+
+| 原计划要求（Day 1 当日学习目标） | 实际达到 |
+|---|---|
+| 默画 7 个 Step 类的关系 | ✅ 不仅默画，还实证 FinalAnswerStep 不在 list 类型注解的设计意图 |
+| 解释 ActionStep.to_messages 的 3-4 条 ChatMessage | ✅ 更精确：**0-5 条**（按字段填充情况），并看清 summary_mode "隐藏想法保留事实"的设计精髓 |
+| 看 memory.steps[2] 能预测下次 messages | ✅ 通过 planning_demo.py 实证验证 |
+| —（计划没要求）| Python 中级语法补齐 3 篇预习（class / iter / yield）|
+| —（计划没要求）| PlanningStep 重规划完整机制 + 实证实验 |
+| —（计划没要求）| Chat message role 的 LLM 训练原理 |
+| —（计划没要求）| AgentMemory + CallbackRegistry 完整覆盖（原计划 Day 6 才会触及）|
+| —（计划没要求）| YAML prompt 模板 + `<end_plan>` stop_sequences 协议层认知 |
+
+### 🐞 Day 1 单步调试夯实（2026-05-04）
+
+为补"读懂代码"和"看到运行时画面"之间的差距，做了 3 个精准断点的单步调试：
+
+| 断点 | 文件:行号 | 验证机制 |
+|---|---|---|
+| A | [memory.py:92](../src/smolagents/memory.py:92) | `ActionStep.to_messages()` 5 分支逐条 append messages |
+| B | [agents.py:768](../src/smolagents/agents.py:768) | `write_memory_to_messages()` 每次 ReAct 全量重发 messages |
+| C | [memory.py:314](../src/smolagents/memory.py:314) | `CallbackRegistry` 的 MRO walk（基类注册 = 监听全部子类）|
+
+调试代码（注册基类 callback 的 `my_cb_old` / `my_cb_new`）保留在 [planning_demo.py](scripts/planning_demo.py) 里作为以后参考，带 `🐞 Day 1 单步调试` 标识，方便随时回查或 revert。
+
+**收益**：Day 1 完成度从"80% 读懂代码 + 实证一次"升级到"100% 读懂 + 实证 + 单步走过关键路径"。为 Day 4-5 的 1800 行 agents.py 攒下了**"在源码里设断点 + `justMyCode: false` + 多次命中跳到目标类型"** 的调试肌肉记忆 —— 那时再读 `_step_stream` 这种核心硬菜，光读不调试容易迷路。
+
+### Day 2 入场提示
+
+按计划读 [tools.py](../src/smolagents/tools.py) 的 Tool 基类（约前 400 行）。核心要看：
+- `Tool.__init_subclass__` 的导入时校验（涉及 Python 元类机制，[user_profile memory](#) 已标记待解释）
+- `forward()` vs `__call__()` 框架包装层
+- tool → JSON schema 的字段映射
+
+**预期感受**：Day 1 的 Python 预习已经把语法障碍清得很干净（`@dataclass` / type hints / `Any` / 迭代协议都熟悉了）。Day 2 主要新概念：`__init_subclass__`（元类相关，比 `@dataclass` 更深一层）+ schema 生成机制。可能会再产出 1 篇 Python 预习笔记。
+
+**关键方法继续不变**：边读边在源码加 `print`/断点，跑 [compare_agents.py](scripts/compare_agents.py) 是最好的源码阅读姿势。

@@ -29,18 +29,30 @@ notes/
 - [vscode-debugging.md](01-setup/vscode-debugging.md) — VS Code 单步调试 my_first_agent.py
 - [proxy-issue.md](01-setup/proxy-issue.md) — 国内访问 HuggingFace 的代理排查记录
 
-### 02-concepts 概念（第 1 周）
+### 02-concepts 概念（第 1 周 + 通用 LLM 概念）
 - [what-is-agent.md](02-concepts/what-is-agent.md) — 什么是 agent？和"调一次 LLM"有什么区别？
 - [codeagent-vs-toolcallingagent.md](02-concepts/codeagent-vs-toolcallingagent.md) — 两种 agent 的对比 + 选型 + 对比 demo（含 thinking 模型 + tools 实战坑）
 - [model-and-protocols-overview.md](02-concepts/model-and-protocols-overview.md) — 模型与协议入门，只讲当前阶段需要的
 - [tool-creation-decorator-vs-subclass.md](02-concepts/tool-creation-decorator-vs-subclass.md) — 创建工具：`@tool` vs `Tool` 子类（含决策表 + 重型资源说明）
+- [chat-message-roles.md](02-concepts/chat-message-roles.md) — Chat Messages 里的 role 是什么？为什么需要它？没有会怎么样？（含 smolagents 5 种 role + chat template 原理）
+
+### 03-source 源码阅读（第 2 周）
+- [python-class-and-dataclass.md](03-source/python-class-and-dataclass.md) — Python 类语法预习：`@dataclass`、`self`、抽象方法、为什么字段写在 `__init__` 外面也能用
+- [python-generators-yield.md](03-source/python-generators-yield.md) — Python 生成器与 `yield`：smolagents 实时事件流的实现基石（`return` vs `yield`、暂停-恢复模型、`Generator[X]` 注解、3 个常见坑）
+- [python-iterables-iterators.md](03-source/python-iterables-iterators.md) — Python 迭代协议：Iterable vs Iterator（很多人写几年都没分清）。`next()` / `iter()` / `for` 怎么协作、`next([1,2,3])` 为什么报错、自定义类如何实现迭代协议
+- [memory-data-structures.md](03-source/memory-data-structures.md) — memory.py 鸟瞰 + Step 家族 4 个简单类（MemoryStep / SystemPromptStep / TaskStep / ToolCall）
+- [planning-mechanics.md](03-source/planning-mechanics.md) — PlanningStep 机制深入：role 切换技、`planning_interval` 公式、重 plan 的 `summary_mode` 隐藏机制（含 [planning_demo.py](../scripts/planning_demo.py) 实证实验）
+- ⭐ [action-step-anatomy.md](03-source/action-step-anatomy.md) — ActionStep 解剖：13 字段按 4 阶段分组、`to_messages()` 5 分支、summary_mode 的"隐藏想法保留事实"设计、CodeAgent vs ToolCallingAgent 字段分工
+- ⭐ [final-answer-step.md](03-source/final-answer-step.md) — FinalAnswerStep 是"事件而非记录"：揭示 smolagents 持久化通道（memory.steps）vs 事件通道（generator yield）的核心设计哲学（含 Day 1 全图谱）
+- [agent-memory-container.md](03-source/agent-memory-container.md) — AgentMemory 容器：所有 Step 的"家"。2 数据成员 + 5 方法，含 reset/replay/return_full_code 用法
+- [callback-registry.md](03-source/callback-registry.md) — CallbackRegistry：Step 完成事件总线（Observer 模式实战）。MRO walk 让基类注册=监听全部 step；inspect.signature 兼容性技巧
 
 ### 05-advanced 进阶（暂不深究，存档备用）
 - [llm-protocols-deep-dive.md](05-advanced/llm-protocols-deep-dive.md) — LLM 协议家族深入对比 ⏸️ `deferred`，时机到了再读
 
 ### 待填
 - 02-concepts：ReAct 循环细节
-- 03-source：memory.py / tools.py / models.py / agents.py 阅读心得
+- 03-source：memory.py / tools.py / models.py / agents.py 阅读心得（按 Day 1-7 推进）
 - 04-experiments：自定义 Tool、改造 RAG 例子
 - 05-advanced：多 Agent、MCP 协议、安全沙箱
 
