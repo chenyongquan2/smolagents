@@ -35,17 +35,34 @@ notes/
 - [model-and-protocols-overview.md](02-concepts/model-and-protocols-overview.md) — 模型与协议入门，只讲当前阶段需要的
 - [tool-creation-decorator-vs-subclass.md](02-concepts/tool-creation-decorator-vs-subclass.md) — 创建工具：`@tool` vs `Tool` 子类（含决策表 + 重型资源说明）
 - [chat-message-roles.md](02-concepts/chat-message-roles.md) — Chat Messages 里的 role 是什么？为什么需要它？没有会怎么样？（含 smolagents 5 种 role + chat template 原理）
+- [json-schema-vs-openapi.md](02-concepts/json-schema-vs-openapi.md) — JSON / JSON Schema / OpenAPI 三者关系：数据格式 vs 形状描述 vs API 描述。回答 "nullable 到底是谁的"（答：OpenAPI 3.0 发明的，不是 JSON Schema 的）+ 协议演进时间线
 
 ### 03-source 源码阅读（第 2 周）
-- [python-class-and-dataclass.md](03-source/python-class-and-dataclass.md) — Python 类语法预习：`@dataclass`、`self`、抽象方法、为什么字段写在 `__init__` 外面也能用
-- [python-generators-yield.md](03-source/python-generators-yield.md) — Python 生成器与 `yield`：smolagents 实时事件流的实现基石（`return` vs `yield`、暂停-恢复模型、`Generator[X]` 注解、3 个常见坑）
-- [python-iterables-iterators.md](03-source/python-iterables-iterators.md) — Python 迭代协议：Iterable vs Iterator（很多人写几年都没分清）。`next()` / `iter()` / `for` 怎么协作、`next([1,2,3])` 为什么报错、自定义类如何实现迭代协议
+
+**Python 语法预习系列**（按需查阅）：
+- [python-class-and-dataclass.md](03-source/python-class-and-dataclass.md) — `@dataclass`、`self`、抽象方法、为什么字段写在 `__init__` 外面也能用
+- [python-generators-yield.md](03-source/python-generators-yield.md) — 生成器与 `yield`：smolagents 实时事件流的实现基石
+- [python-iterables-iterators.md](03-source/python-iterables-iterators.md) — 迭代协议：Iterable vs Iterator、`next()` / `iter()` / `for` 怎么协作
+- [python-init-subclass.md](03-source/python-init-subclass.md) — `__init_subclass__` 钩子：子类被定义时触发，比元类更轻量；smolagents 用它"装挂钩 wrap `__init__`"
+- [python-abc-abstract-base-class.md](03-source/python-abc-abstract-base-class.md) — `abc.ABC` + `@abstractmethod`：硬约束（实例化时崩）vs 软约束（调用时崩）；smolagents 同一文件混用两种的设计意图
+- [python-class-vs-instance-attributes.md](03-source/python-class-vs-instance-attributes.md) — 类属性 vs 实例属性：写法/存储位置/查找机制/共享行为，回答"Tool 的 name/description 到底是哪种"
+- [python-decorators-explained.md](03-source/python-decorators-explained.md) — Python 装饰器本质：`@xxx` 是语法糖等价于 `foo = xxx(foo)`；装饰器可返回函数/类/实例（解释 `@tool` 怎么把函数变实例）；带参数装饰器、叠加顺序、与 Java 注解对比
+
+**Day 1 · memory.py 系列**：
 - [memory-data-structures.md](03-source/memory-data-structures.md) — memory.py 鸟瞰 + Step 家族 4 个简单类（MemoryStep / SystemPromptStep / TaskStep / ToolCall）
 - [planning-mechanics.md](03-source/planning-mechanics.md) — PlanningStep 机制深入：role 切换技、`planning_interval` 公式、重 plan 的 `summary_mode` 隐藏机制（含 [planning_demo.py](../scripts/planning_demo.py) 实证实验）
 - ⭐ [action-step-anatomy.md](03-source/action-step-anatomy.md) — ActionStep 解剖：13 字段按 4 阶段分组、`to_messages()` 5 分支、summary_mode 的"隐藏想法保留事实"设计、CodeAgent vs ToolCallingAgent 字段分工
 - ⭐ [final-answer-step.md](03-source/final-answer-step.md) — FinalAnswerStep 是"事件而非记录"：揭示 smolagents 持久化通道（memory.steps）vs 事件通道（generator yield）的核心设计哲学（含 Day 1 全图谱）
 - [agent-memory-container.md](03-source/agent-memory-container.md) — AgentMemory 容器：所有 Step 的"家"。2 数据成员 + 5 方法，含 reset/replay/return_full_code 用法
 - [callback-registry.md](03-source/callback-registry.md) — CallbackRegistry：Step 完成事件总线（Observer 模式实战）。MRO walk 让基类注册=监听全部 step；inspect.signature 兼容性技巧
+
+**Day 2 · tools.py 系列**（**严格按顺序读：1 → 2 → 3 → 源码**）：
+- ⭐ ① [tool-class-role-overview.md](03-source/tool-class-role-overview.md) — **入口笔记**。Tool 类角色概览：3 个客户角色 + 4 个类属性 + 方法按生命周期分 4 组（A 定义时 / B 实例化时 / C 调用时 / D 渲染时） + 一张时机串联图
+- ⭐ ② [tool-lifecycle-checks-mental-model.md](03-source/tool-lifecycle-checks-mental-model.md) — Tool 实例一生中的两次质检（出厂 + 上岗）：为什么必须分两次、为什么有 `__call__` 和 `forward` 两个方法、3 类比对照（TS 类型检查 / web middleware / Python 装饰器）+ 实现细节速查
+- ⭐ ③ [tool-schema-rendering-mental-model.md](03-source/tool-schema-rendering-mental-model.md) — Tool 渲染：一份数据，4 种形状（CodeAgent prompt / ToolCallingAgent prompt 文字 / HTTP tools JSON / 序列化字典）。**修正常见误解**：HTTP tools 字段不是 `to_tool_calling_prompt` 渲染的，是 models.py 的 `get_tool_json_schema` 渲染的
+- [tool-input-nullable.md](03-source/tool-input-nullable.md) — `nullable` 字段含义：JSON Schema 标准的"可选参数"标记。标 vs 不标对 LLM 行为的差异，与 Python 默认值/`Optional` 的双源真相对账机制
+- [tool-decorator-implementation.md](03-source/tool-decorator-implementation.md) — `@tool` 装饰器源码解读：验证 Week 1 三个结论（动态子类 / forward 是 staticmethod / 装饰后是实例）+ 2 个延伸洞察（schema 来自注解+docstring / `__source__` 反向重建）
+- ④ 直接对照源码 [tools.py:144-365](../../src/smolagents/tools.py#L144) + [models.py:288-326](../../src/smolagents/models.py#L288) 精读
 
 ### 05-advanced 进阶（暂不深究，存档备用）
 - [llm-protocols-deep-dive.md](05-advanced/llm-protocols-deep-dive.md) — LLM 协议家族深入对比 ⏸️ `deferred`，时机到了再读

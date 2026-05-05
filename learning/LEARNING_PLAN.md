@@ -138,7 +138,7 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 - [x] **Week 1 Day 4-5**：Guided Tour — 30 分钟扫读 + Tool 子类实操；写了 [compare_agents.py](scripts/compare_agents.py)（实测 ToolCallingAgent 5 步 vs CodeAgent 2 步，答案都是 86°F）
 - **Week 2**（按天打勾）：
   - [x] **Day 1**：[memory.py](../src/smolagents/memory.py) ✅ 全部 316 行读完 —— 详见下方 [Week 2 Day 1 学习总结](#week-2--day-1-学习总结2026-05-02--2026-05-03)（10 篇笔记 + 1 个实验）
-  - [ ] Day 2：[tools.py](../src/smolagents/tools.py) 基类（Python 函数 → tool schema）
+  - [x] **Day 2**：[tools.py](../src/smolagents/tools.py) 基类（Python 函数 → tool schema） ✅ —— 详见下方 [Week 2 Day 2 学习总结](#week-2-day-2-学习总结2026-05-04--2026-05-05)（8 篇笔记 + 3 个实验脚本 + 教学宪法升级）
   - [ ] Day 3：[models.py](../src/smolagents/models.py) 基类 + InferenceClientModel（请求体拼装）
   - [ ] Day 4：[agents.py](../src/smolagents/agents.py) 上半（`MultiStepAgent.run()` 外循环）
   - [ ] Day 5：[agents.py](../src/smolagents/agents.py) 下半 ⭐（`_step_stream()` 心脏）
@@ -279,3 +279,84 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 **预期感受**：Day 1 的 Python 预习已经把语法障碍清得很干净（`@dataclass` / type hints / `Any` / 迭代协议都熟悉了）。Day 2 主要新概念：`__init_subclass__`（元类相关，比 `@dataclass` 更深一层）+ schema 生成机制。可能会再产出 1 篇 Python 预习笔记。
 
 **关键方法继续不变**：边读边在源码加 `print`/断点，跑 [compare_agents.py](scripts/compare_agents.py) 是最好的源码阅读姿势。
+
+---
+
+## Week 2 Day 2 学习总结（2026-05-04 ~ 2026-05-05）
+
+> **一句话定调**：用 Day 2 两天时间不仅读完 [tools.py](../src/smolagents/tools.py) Tool 基类核心 ~230 行，**还在过程中固化了"讲解宪法"** —— 任何学习 part 必须先 mental model 后实现。这条宪法将贯穿整个 Week 2 余下时间和 Week 3-4。最终产出 8 篇新笔记 + 3 个实验脚本 + 1 份仓库级 CLAUDE.md。
+
+### 9 条最值得记住的源码侧核心洞察
+
+1. **Tool 类 = 一个零件，一生中接受 2 次质检**：出厂质检（实例化时 `validate_arguments` 查 schema 形状）+ 上岗质检（每次 `__call__` 时清洗参数）。**每件事尽可能放在能做它的最早时机**。
+2. **`__init_subclass__` 不直接校验，只装挂钩**：`Tool.__init_subclass__` → `validate_after_init(cls)` → wrap 子类 `__init__`。**用户怎么写都绕不过校验** —— 这是 wrap 模式比"基类 `__init__` 校验"更强的根本原因（后者子类可能忘调 `super().__init__()`）。
+3. ⭐ **`validate_arguments` 第 ⑥ 项 = 双源真相对账**：用 `inspect.signature` 反射读 forward 形参，跟 inputs 字典 key 比对。前 5 项都通过也堵不住"用户 inputs 写 city 但 forward 写 location"这种不一致 —— 第 ⑥ 项专治此症。类比 TypeScript 的 `.d.ts` 必须和 `.ts` 实现保持同步。
+4. **`__call__` ≠ `forward` 的设计意图 = 横切关注点分离**：`__call__` 是框架包装层（lazy setup / dict→kwargs / 输入清洗 / 输出清洗），`forward` 是用户业务层。用户写 forward 不用关心框架杂事；框架想加新功能不用改用户代码。
+5. ⭐⭐ **同一份数据，4 种渲染形状**：CodeAgent prompt 看到"假装的 Python def" / ToolCallingAgent prompt 看到"一行文字描述" / HTTP `tools` 字段看到"OpenAI 标准 JSON" / 磁盘看到"序列化字典"。**LLM 模式不同需要不同呈现** —— 这就是 Tool 真正的核心价值。
+6. ⚠️ **HTTP `tools` 字段不是 `to_tool_calling_prompt` 渲染的**！它由独立函数 [models.py:288 `get_tool_json_schema`](../src/smolagents/models.py#L288) 渲染，**不在 Tool 类上**。原因是关注点分离 —— 它依赖外部协议（OpenAI/Anthropic），属于模型调用层。**这个误解很常见**（Day 2 中段我自己写的笔记都搞错过，后来读源码才发现并修正）。
+7. **`nullable` = JSON Schema 标准的"可选参数"标记**：标了的字段不在 OpenAI `required` 列表里，LLM 知道可以不传。`required` 数组（结构化信号）比 description 自然语言对 LLM 更可靠。validate_arguments 第 ⑥ 项还会校验 inputs nullable 和 forward `| None` 注解的双源一致性。
+8. **`@tool` 装饰器源码完全验证 Week 1 三个结论**：`class SimpleTool(Tool):` 写在函数内（动态子类）、`forward = staticmethod(wrapped_function)`（挂不住实例资源）、最后 `return SimpleTool()`（返回实例不是类）。**Week 1 → Week 2 闭环完成**。
+9. **Tool schema 全是类属性而不是 `__init__` 参数**：4 个理由 —— schema 是固有性质应共享 / 省内存 / `__init_subclass__` 在子类定义时能查 / 错误更早暴露。
+
+### 3 条 Python 基础认知（意外之得）
+
+10. **`__init_subclass__` ≠ `__init__` ≠ `__new__`**：钩子触发于子类**定义时**（不是实例化时）。Python 3.6 PEP 487 引入，比 metaclass 轻量；smolagents 用它"装挂钩 wrap 子类 `__init__`"。
+11. **`abc.ABC` 硬约束 vs `raise NotImplementedError` 软约束**：前者实例化时崩、后者调用时崩。BaseTool 用前者（框架必经入口）、Tool.forward 用后者（给 wrapper 子类留绕过的口子）。**同一个文件混用两种是有意的**。
+12. **类属性 vs 实例属性**：Python 没有"字段声明"语法，**写在 class 体里赋值就是类属性，写在 `__init__` 里 `self.x` 就是实例属性**。`obj.x` 取值时先查实例 → 再查类（向类回退），所以类属性"看起来像"实例属性。Tool 的 4 个 schema 字段全是类属性，唯一的实例属性是 `is_initialized`。
+
+### 实战踩坑收获
+
+- **Day 2 中段写的 `tool-validation-three-layers.md` 违宪**（直接 line-by-line，没先讲 mental model），用户反馈"难以理解"。后来 5 步处理：① 写 mental-model 笔记 → ② 抢救独家细节合并 → ③ 删除违宪笔记 → ④ 改索引 → ⑤ 把"违宪 SOP"写进宪法记忆。**这次踩坑直接让宪法升级到"宇宙级规则"**。
+- **role-overview 笔记里关于 `to_tool_calling_prompt → OpenAI tools 字段` 的说法是错的**。读段 5 源码时发现 + 修正。**反映的不只是事实错误，是当时没想清楚 ToolCallingAgent 实际有 2 个渲染产出（prompt 文字 + HTTP JSON）来自不同位置**。修正动作 =顺手做的最有价值的副产物。
+- **Windows 控制台 GBK 编码**会让 demo 脚本里的 emoji + 中文乱码 / UnicodeEncodeError。**所有 demo 脚本顶部必加 `sys.stdout.reconfigure(encoding="utf-8")`** —— 这条已固化到 [CLAUDE.md](../CLAUDE.md) 仓库级指令里。
+
+### 笔记产出（8 篇 + 3 实验）
+
+**Python 预习系列（3 篇新增）**：
+- [python-init-subclass.md](notes/03-source/python-init-subclass.md) — `__init_subclass__` 钩子机制（vs `__init__` / metaclass / `super` 链式传递）
+- [python-abc-abstract-base-class.md](notes/03-source/python-abc-abstract-base-class.md) — `abc.ABC` + `@abstractmethod` 硬约束 vs 软约束
+- [python-class-vs-instance-attributes.md](notes/03-source/python-class-vs-instance-attributes.md) — 类属性 vs 实例属性，回答"Tool 的 name 到底是哪种"
+
+**Day 2 tools.py 系列（5 篇新增，宪法 3 层结构）**：
+- ⭐ [tool-class-role-overview.md](notes/03-source/tool-class-role-overview.md) — Tool 类整体角色（3 客户 + 4 类属性 + 4 生命周期组）
+- ⭐ [tool-lifecycle-checks-mental-model.md](notes/03-source/tool-lifecycle-checks-mental-model.md) — 出厂/上岗两次质检（含实现细节速查）
+- ⭐ [tool-schema-rendering-mental-model.md](notes/03-source/tool-schema-rendering-mental-model.md) — 一份数据 4 种渲染形状（含修正之前误解）
+- [tool-input-nullable.md](notes/03-source/tool-input-nullable.md) — JSON Schema nullable 含义 + 双源真相对账
+- [tool-decorator-implementation.md](notes/03-source/tool-decorator-implementation.md) — `@tool` 装饰器源码验证 Week 1 三个结论 + 2 个延伸洞察
+
+**实验脚本（3 个）**：
+- [init_subclass_demo.py](scripts/init_subclass_demo.py) — 6 个独立 demo 验证 `__init_subclass__` 各种行为（含 smolagents wrap 模式仿写）
+- [abc_demo.py](scripts/abc_demo.py) — 6 个 demo 对比硬约束 vs 软约束（含 BaseTool / Tool.forward 双写法的反证实验）
+- [tool_schema_trace.py](scripts/tool_schema_trace.py) — 6 个 demo 看 1 个 Tool 实例如何被渲染成 4 种形态（最有价值的是 Demo 6 同一个 nullable 字段的 3 种处理对比）
+
+**仓库级产出（1 个）**：
+- [CLAUDE.md](../CLAUDE.md) — 仓库级 Claude Code 指令（personal-study 分支约定 / learning 目录布局 / 笔记 3 层结构 / 编码 fix 强制要求 / 教学宪法 pointer）
+
+### 已超出原计划
+
+| 原计划要求（Day 2 当日学习目标） | 实际达到 |
+|---|---|
+| 解释 `Tool.__init_subclass__` 在 import 阶段做的校验 | ✅ **修正措辞** —— 实际只 wrap、不直接校验，真校验在实例化时 |
+| 区分 `forward()` vs `__call__()` | ✅ 不仅区分，还讲清楚 4 件横切关注点分离 + 反证"如果 forward 也用 @abstractmethod 会怎样" |
+| trace tool → JSON schema → HTTP body 的完整路径 | ✅ 写了 [tool_schema_trace.py](scripts/tool_schema_trace.py) 亲眼对比 4 种渲染形态 + 6 个 demo |
+| —（计划没要求）| 把 Python 中级语法补齐 3 篇预习（init-subclass / abc / class-vs-instance-attr）|
+| —（计划没要求）| **固化教学宪法**：先 mental model 后实现，写进 user 记忆 + CLAUDE.md，**适用所有未来学习 part** |
+| —（计划没要求）| 创建 [CLAUDE.md](../CLAUDE.md)（仓库级 + 跨设备同步） + 升级笔记 3 层结构（role-overview / mental-model / 实现细节） |
+| —（计划没要求）| 修正 role-overview 关于 OpenAI tools 字段的错误描述（读段 5 源码时发现）|
+| —（计划没要求）| 验证并落地 Week 1 → Week 2 闭环（`@tool` 装饰器源码彩蛋）|
+
+### Day 3 入场提示
+
+按计划读 [models.py](../src/smolagents/models.py) Model 基类 + InferenceClientModel（约 600 行）。核心要看：
+- Model 基类的角色（"调用渠道"概念，Week 1 [model-and-protocols-overview.md](notes/02-concepts/model-and-protocols-overview.md) 已铺垫过）
+- `Model.generate()` 入参 / 返回结构
+- 一次真实请求的 JSON body 拼装过程，每个字段来源
+- ⭐ 已经在 Day 2 段 5 见过的 [models.py:288 `get_tool_json_schema`](../src/smolagents/models.py#L288) + [models.py:540 tools 字段拼装](../src/smolagents/models.py#L540) 的上下文
+
+**预期产出**：
+- 1 篇 `model-class-role-overview.md`（必须，按宪法）
+- 1 篇 `model-generate-mental-model.md`（请求体拼装的 mental model）
+- 可能 1-2 篇实现细节笔记
+- 可能 1 个实验脚本（抓一次真实请求体，对照源码每个字段来源）
+
+**关键方法继续不变**：先 mental model 再实现 + 边读边在源码加 `print`/断点 + 跑现有 demo 脚本设断点（[my_first_agent.py](scripts/my_first_agent.py) / [compare_agents.py](scripts/compare_agents.py) / 今天的 [tool_schema_trace.py](scripts/tool_schema_trace.py)）。
