@@ -36,6 +36,9 @@ notes/
 - [tool-creation-decorator-vs-subclass.md](02-concepts/tool-creation-decorator-vs-subclass.md) — 创建工具：`@tool` vs `Tool` 子类（含决策表 + 重型资源说明）
 - [chat-message-roles.md](02-concepts/chat-message-roles.md) — Chat Messages 里的 role 是什么？为什么需要它？没有会怎么样？（含 smolagents 5 种 role + chat template 原理）
 - [json-schema-vs-openapi.md](02-concepts/json-schema-vs-openapi.md) — JSON / JSON Schema / OpenAPI 三者关系：数据格式 vs 形状描述 vs API 描述。回答 "nullable 到底是谁的"（答：OpenAPI 3.0 发明的，不是 JSON Schema 的）+ 协议演进时间线
+- ⭐⭐ [llm-vs-api-server-architecture.md](02-concepts/llm-vs-api-server-architecture.md) — **LLM 模型 vs LLM API 服务器是两层**（神经网络 vs HTTP 服务程序）。**§2 术语约定 4 角色**（用户 / agent 框架 / LLM API 服务器 / LLM 模型）—— 后续所有笔记必须用这套术语；每个协议字段（stop / temperature / tools / max_tokens / response_format）属于哪一层、对谁有意义；为什么 prompt 给模型而 stop 给服务器；自动售货机类比；4 个常见认知误区。**读 agents.py 之前必备的底层心智模型**
+- ⭐⭐ [llm-api-server-internals.md](02-concepts/llm-api-server-internals.md) — **LLM API 服务器内部 8 步流水线 + 与 LLM 模型如何协作**。LLM 模型本质 = 无状态纯函数（吃 token 吐概率向量）；服务器是协调器（跑生成循环反复调模型 N 次）；7 个协议字段在哪一步生效全局对照表；KV cache 让 O(N²) 降 O(N)；流式 vs 非流式只差响应阶段；云端 vs 本地架构对比（本地把"服务器"角色装进 Python 进程）
+- ⭐ [chat-template-explained.md](02-concepts/chat-template-explained.md) — **Chat template** = 把结构化 messages 翻译成 LLM 模型能吃的扁平字符串的**模型专属格式规则**（Qwen / Llama-2 / Llama-3 / Mistral 4 种格式对比）；特殊 token 是模型识别 role 边界的根基；用错 template 模型会混乱；同模型不同 provider 输出可能不同的根因；`tools` 字段也走 chat template；⭐ 揭示 smolagents 5 role 降维成 3 role 的真实根因（chat template 不认非标准 role）。**完成 Week 1 chat-message-roles → Day 3 chat template 的概念闭环**
 
 ### 03-source 源码阅读（第 2 周）
 
@@ -47,6 +50,8 @@ notes/
 - [python-abc-abstract-base-class.md](03-source/python-abc-abstract-base-class.md) — `abc.ABC` + `@abstractmethod`：硬约束（实例化时崩）vs 软约束（调用时崩）；smolagents 同一文件混用两种的设计意图
 - [python-class-vs-instance-attributes.md](03-source/python-class-vs-instance-attributes.md) — 类属性 vs 实例属性：写法/存储位置/查找机制/共享行为，回答"Tool 的 name/description 到底是哪种"
 - [python-decorators-explained.md](03-source/python-decorators-explained.md) — Python 装饰器本质：`@xxx` 是语法糖等价于 `foo = xxx(foo)`；装饰器可返回函数/类/实例（解释 `@tool` 怎么把函数变实例）；带参数装饰器、叠加顺序、与 Java 注解对比
+- [python-args-kwargs.md](03-source/python-args-kwargs.md) — `*args` 与 `**kwargs`：含义、tuple vs dict、定义/调用两端对称、为什么 `Model.__init__` 用 `**kwargs` 不用 `*args`（LLM 配置项天然有名字，要 key 才能拼 HTTP body）+ 装饰器为什么两个都写
+- [python-sentinel-pattern.md](03-source/python-sentinel-pattern.md) — Python 哨兵模式（Sentinel）：当 None 不够用时。3 经典场景（区分"没传 vs 传 None" / 区分"键存在 vs 不存在" / 让"删除"成为一种值，即 smolagents `REMOVE_PARAMETER` 用法）+ 为什么用 `is` 不用 `==`（防伪造）+ 标准库哨兵实例（`dataclasses.MISSING` / `inspect.Parameter.empty`）+ 反模式
 
 **Day 1 · memory.py 系列**：
 - [memory-data-structures.md](03-source/memory-data-structures.md) — memory.py 鸟瞰 + Step 家族 4 个简单类（MemoryStep / SystemPromptStep / TaskStep / ToolCall）
@@ -63,6 +68,14 @@ notes/
 - [tool-input-nullable.md](03-source/tool-input-nullable.md) — `nullable` 字段含义：JSON Schema 标准的"可选参数"标记。标 vs 不标对 LLM 行为的差异，与 Python 默认值/`Optional` 的双源真相对账机制
 - [tool-decorator-implementation.md](03-source/tool-decorator-implementation.md) — `@tool` 装饰器源码解读：验证 Week 1 三个结论（动态子类 / forward 是 staticmethod / 装饰后是实例）+ 2 个延伸洞察（schema 来自注解+docstring / `__source__` 反向重建）
 - ④ 直接对照源码 [tools.py:144-365](../../src/smolagents/tools.py#L144) + [models.py:288-326](../../src/smolagents/models.py#L288) 精读
+
+**Day 3 · models.py 系列**（**严格按顺序读：1 → 2 → 源码**）：
+- ⭐ ① [model-class-role-overview.md](03-source/model-class-role-overview.md) — **入口笔记**。Model 类角色概览：3 个客户角色（agent / 子类 / 序列化）+ 5 个实例属性（含 self.kwargs 优先级机制）+ 方法按角色分 3 组（A 公开接口 / B 子类共享 / C 序列化）+ 为什么基类自己不发请求 + Day 2 段5 闭环（HTTP tools 字段在哪渲染）+ Week 1 chat-message-roles 闭环（5 role 喂 LLM 时降维）
+- ⭐ ② [model-generate-mental-model.md](03-source/model-generate-mental-model.md) — `_prepare_completion_kwargs` 5 步流水线：① 清洗 messages（含 role 转换 + ⭐ 连续同 role 合并）→ ② 写 specific 参数（HTTP tools 字段渲染处）→ ③ caller kwargs → ④ self.kwargs 压舱石 + REMOVE_PARAMETER 哨兵 → ⑤ 返回。三层优先级 + Day 2 段5 闭环回收 + Week 1 chat template 闭环回收
+- ⭐ [model-stop-sequences.md](03-source/model-stop-sequences.md) — `stop_sequences` 详解。**§3 stop 是 agent 框架给 LLM API 服务器的**；**§4 EOS / stop / max_tokens 三机制互补**（ChatGPT 不胡编靠 EOS；EOS = 句号、stop = 逗号）；§5-6 smolagents 用法 + 双保险；**§7 ⭐⭐ 关键澄清：stop 是被动检测，prompt 才是主动控制**（服务器不能强制模型输出，反证单独传 stop 不教 prompt = 白传；constrained decoding 才是主动约束但 stop 不用；token 边界细节）；§9 reasoning 模型不支持的 3 类根本原因 + smolagents 3 道兜底 + **§9.3 agent 框架的 3 种知识来源**（硬编码白名单 / `REMOVE_PARAMETER` 用户声明 / smolagents 不做 400 重试）+ 协议碎片化挑战
+- [model-generate-params-explained.md](03-source/model-generate-params-explained.md) — `_prepare_completion_kwargs` 7 个参数详解（按"控制 LLM 哪一面"分组）：messages / stop_sequences / response_format / tools_to_call_from / custom_role_conversions / convert_images_to_image_urls / tool_choice / **kwargs。每个含义、默认值、谁通常传、OpenAI 协议字段映射 + 速查表
+- ⭐ [inference-client-model-impl.md](03-source/inference-client-model-impl.md) — InferenceClientModel 落地：3 层继承（Model → ApiModel → InferenceClientModel）+ ApiModel 三件武器（client/rate_limit/retry）+ generate 五件事（pre-check / 拼 body / 节流 / retry+发请求 / 解析+stop 兜底+包 ChatMessage）。ChatMessage `raw` 字段终于有值；reasoning 模型 stop fallback；3 个意外发现
+- [model-rate-limit-and-retry.md](03-source/model-rate-limit-and-retry.md) — 节流（Rate Limiting）vs 重试（Retry）：API 走网络的双层保险。时机/问题/类比对照、节流主动预防（token bucket）、重试指数退避 + jitter 打散羊群、`retry_predicate` 只重试临时性错误（429）、"retry 包裹"=装饰器思想、本地模型为什么不需要
 
 ### 05-advanced 进阶（暂不深究，存档备用）
 - [llm-protocols-deep-dive.md](05-advanced/llm-protocols-deep-dive.md) — LLM 协议家族深入对比 ⏸️ `deferred`，时机到了再读

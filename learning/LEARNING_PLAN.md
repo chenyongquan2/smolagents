@@ -139,7 +139,7 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 - **Week 2**（按天打勾）：
   - [x] **Day 1**：[memory.py](../src/smolagents/memory.py) ✅ 全部 316 行读完 —— 详见下方 [Week 2 Day 1 学习总结](#week-2--day-1-学习总结2026-05-02--2026-05-03)（10 篇笔记 + 1 个实验）
   - [x] **Day 2**：[tools.py](../src/smolagents/tools.py) 基类（Python 函数 → tool schema） ✅ —— 详见下方 [Week 2 Day 2 学习总结](#week-2-day-2-学习总结2026-05-04--2026-05-05)（8 篇笔记 + 3 个实验脚本 + 教学宪法升级）
-  - [ ] Day 3：[models.py](../src/smolagents/models.py) 基类 + InferenceClientModel（请求体拼装）
+  - 🔄 **Day 3**（进行中）：[models.py](../src/smolagents/models.py) 基类 + InferenceClientModel（请求体拼装）—— **已产出 11 篇笔记**：3 篇主线（role-overview / generate-mental-model / inference-client-model-impl）+ 5 篇延伸（args-kwargs / sentinel-pattern / stop-sequences / params-explained / rate-limit-and-retry）+ 3 篇 02-concepts 概念笔记（llm-vs-api-server-architecture / llm-api-server-internals / chat-template-explained）。**待续**：HTTP body trace 实验脚本（验收标准 ②）+ Day 3 综合总结
   - [ ] Day 4：[agents.py](../src/smolagents/agents.py) 上半（`MultiStepAgent.run()` 外循环）
   - [ ] Day 5：[agents.py](../src/smolagents/agents.py) 下半 ⭐（`_step_stream()` 心脏）
   - [ ] Day 6：[local_python_executor.py](../src/smolagents/local_python_executor.py)（浏览）
