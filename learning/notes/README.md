@@ -39,6 +39,7 @@ notes/
 - ⭐⭐ [llm-vs-api-server-architecture.md](02-concepts/llm-vs-api-server-architecture.md) — **LLM 模型 vs LLM API 服务器是两层**（神经网络 vs HTTP 服务程序）。**§2 术语约定 4 角色**（用户 / agent 框架 / LLM API 服务器 / LLM 模型）—— 后续所有笔记必须用这套术语；每个协议字段（stop / temperature / tools / max_tokens / response_format）属于哪一层、对谁有意义；为什么 prompt 给模型而 stop 给服务器；自动售货机类比；4 个常见认知误区。**读 agents.py 之前必备的底层心智模型**
 - ⭐⭐ [llm-api-server-internals.md](02-concepts/llm-api-server-internals.md) — **LLM API 服务器内部 8 步流水线 + 与 LLM 模型如何协作**。LLM 模型本质 = 无状态纯函数（吃 token 吐概率向量）；服务器是协调器（跑生成循环反复调模型 N 次）；7 个协议字段在哪一步生效全局对照表；KV cache 让 O(N²) 降 O(N)；流式 vs 非流式只差响应阶段；云端 vs 本地架构对比（本地把"服务器"角色装进 Python 进程）
 - ⭐ [chat-template-explained.md](02-concepts/chat-template-explained.md) — **Chat template** = 把结构化 messages 翻译成 LLM 模型能吃的扁平字符串的**模型专属格式规则**（Qwen / Llama-2 / Llama-3 / Mistral 4 种格式对比）；特殊 token 是模型识别 role 边界的根基；用错 template 模型会混乱；同模型不同 provider 输出可能不同的根因；`tools` 字段也走 chat template；⭐ 揭示 smolagents 5 role 降维成 3 role 的真实根因（chat template 不认非标准 role）。**完成 Week 1 chat-message-roles → Day 3 chat template 的概念闭环**
+- ⭐⭐ [codeagent-how-it-works.md](02-concepts/codeagent-how-it-works.md) — **CodeAgent 工作机制完整心智模型**（4 个递进问题串成）：Q1 工具传递路径（prompt 文本 vs OpenAI tools 字段）→ Q2 为什么需要 LLM 写代码（tool=原子操作 / LLM=编排逻辑 + 厨师类比）→ Q3 LLM 能写哪些代码（3 Layer：tool 调用 / 纯 Python / 沙箱禁止）→ Q4 谁告诉 LLM 限制（prompt 教 + 沙箱拒 + 错误反馈三层闭环）+ 跟 stop_sequences 同构的设计哲学 + Day 4-6 阅读指南。**Day 4 读 agents.py 之前的最后认知拼图**
 
 ### 03-source 源码阅读（第 2 周）
 
