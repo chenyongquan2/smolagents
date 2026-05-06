@@ -139,7 +139,7 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 - **Week 2**（按天打勾）：
   - [x] **Day 1**：[memory.py](../src/smolagents/memory.py) ✅ 全部 316 行读完 —— 详见下方 [Week 2 Day 1 学习总结](#week-2--day-1-学习总结2026-05-02--2026-05-03)（10 篇笔记 + 1 个实验）
   - [x] **Day 2**：[tools.py](../src/smolagents/tools.py) 基类（Python 函数 → tool schema） ✅ —— 详见下方 [Week 2 Day 2 学习总结](#week-2-day-2-学习总结2026-05-04--2026-05-05)（8 篇笔记 + 3 个实验脚本 + 教学宪法升级）
-  - 🔄 **Day 3**（进行中）：[models.py](../src/smolagents/models.py) 基类 + InferenceClientModel（请求体拼装）—— **已产出 11 篇笔记**：3 篇主线（role-overview / generate-mental-model / inference-client-model-impl）+ 5 篇延伸（args-kwargs / sentinel-pattern / stop-sequences / params-explained / rate-limit-and-retry）+ 3 篇 02-concepts 概念笔记（llm-vs-api-server-architecture / llm-api-server-internals / chat-template-explained）。**待续**：HTTP body trace 实验脚本（验收标准 ②）+ Day 3 综合总结
+  - [x] **Day 3**：[models.py](../src/smolagents/models.py) 基类 + InferenceClientModel（请求体拼装） ✅ —— 详见下方 [Week 2 Day 3 学习总结](#week-2-day-3-学习总结2026-05-05--2026-05-06)（11 篇笔记 + 1 个实验脚本 + 4 角色术语统一 + LLM/服务器分层心智模型）
   - [ ] Day 4：[agents.py](../src/smolagents/agents.py) 上半（`MultiStepAgent.run()` 外循环）
   - [ ] Day 5：[agents.py](../src/smolagents/agents.py) 下半 ⭐（`_step_stream()` 心脏）
   - [ ] Day 6：[local_python_executor.py](../src/smolagents/local_python_executor.py)（浏览）
@@ -360,3 +360,84 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 - 可能 1 个实验脚本（抓一次真实请求体，对照源码每个字段来源）
 
 **关键方法继续不变**：先 mental model 再实现 + 边读边在源码加 `print`/断点 + 跑现有 demo 脚本设断点（[my_first_agent.py](scripts/my_first_agent.py) / [compare_agents.py](scripts/compare_agents.py) / 今天的 [tool_schema_trace.py](scripts/tool_schema_trace.py)）。
+
+---
+
+## Week 2 Day 3 学习总结（2026-05-05 ~ 2026-05-06）
+
+> **一句话定调**：用 Day 3 两天时间不仅读完 [models.py](../src/smolagents/models.py) Model 基类 + InferenceClientModel 子类（约 600 行），**还借机建立"4 角色术语统一" + "LLM vs LLM API 服务器分层"两套通用心智模型**，为整个 Week 2 余下时间和 Week 3-4 读 agents.py / 接其他 provider 都打下硬底子。最终产出 11 篇笔记 + 1 个实验脚本。
+
+### 9 条最值得记住的源码侧核心洞察
+
+1. **Model 基类 = "调用渠道" 抽象 + 不发请求**：基类只管"拼 body + 接口契约"，差异（HTTP / 本地推理 / 云 SDK）全在子类。`generate` 是 `raise NotImplementedError` 软约束，**子类必须实现**
+2. **`_prepare_completion_kwargs` 5 步流水线**：① 清洗 messages → ② 写 specific 参数 → ③ caller kwargs → ④ self.kwargs 压舱石 → ⑤ 返回。**最早写入的优先级最低**（"用户意图最高 vs 框架默认最低"）
+3. ⭐ **`self.kwargs` = 压舱石**：实例化时存的默认参数**最高优先级**，最后一步覆盖一切。配合哨兵 `REMOVE_PARAMETER` 还能**主动删字段**（区分"传 None"和"字段不存在"）
+4. ⭐⭐ **Day 2 → Day 3 闭环回收**：HTTP `tools` 字段就在 [models.py:540](../src/smolagents/models.py#L540) `_prepare_completion_kwargs` 步骤 ② 调 [`get_tool_json_schema`](../src/smolagents/models.py#L288) 渲染。Day 2 [tool-schema-rendering-mental-model.md](notes/03-source/tool-schema-rendering-mental-model.md) 的预言完全验证
+5. **3 层继承的边界**：Model（拼 body）→ ApiModel（走网络共享：client + rate_limit + retry）→ InferenceClientModel（HF 特定）。**走不走网络是清晰分界线**，本地模型直接继承 Model 跳过 ApiModel
+6. **InferenceClientModel.generate 五件事**：① pre-check 协议兼容 → ② 拼 body（含 `convert_images_to_image_urls=True` HF 固定决策）→ ③ 节流 → ④ retry 包裹下真发请求 → ⑤ 解析 + ⭐ stop fallback strip + 包 ChatMessage
+7. ⭐ **stop_sequences 的双保险真正含义** = LLM 模型 + LLM API 服务器**两个不同主体协同**，不是"用户保险 + 框架保险"。**stop 是被动检测，prompt 才是主动控制** —— 服务器不能强迫模型输出 stop 字符串，模型必须被 prompt 教过才会输出
+8. **三种停止机制（EOS / stop / max_tokens）互补**：EOS = 句号（语义完成）；stop = 逗号（中间暂停）；max_tokens = 物理上限。Agent 协议要求停的位置 EOS **永远不会触发** —— 因为模型按对话语义认为"还没说完"
+9. **协议碎片化是 smolagents 写多个子类的根本原因**：每家 provider 协议字段名（OpenAI `stop` vs Anthropic `stop_sequences`）/ 支持范围（reasoning 模型禁 stop）/ 限制都不一样，必须**逐家手工适配** + 维护 `supports_stop_parameter` 白名单
+
+### 4 条通用心智模型（最大的"超出原计划" 收获）
+
+10. ⭐⭐ **LLM 模型 vs LLM API 服务器是两层**（[llm-vs-api-server-architecture.md](notes/02-concepts/llm-vs-api-server-architecture.md)）：模型是无状态纯函数（吃 token 吐概率向量），LLM API 服务器是 HTTP 服务程序（解析 / 调度 / 控制）。**所有协议字段（stop / temperature / tools / max_tokens / response_format / tool_choice）都是给服务器看的，模型完全不知道**
+11. ⭐⭐ **服务器内部 8 步流水线**（[llm-api-server-internals.md](notes/02-concepts/llm-api-server-internals.md)）：HTTP 解析 → 队列 → chat_template → tokenize → ⭐ 生成循环（反复调模型 N 次）→ detokenize → 包响应 → HTTP 序列化。**生成 100 token 的回答 = 调模型 100 次**（自回归）；KV cache 让 O(N²) 降 O(N)
+12. ⭐ **Chat template 是 messages → token 序列的翻译机制**（[chat-template-explained.md](notes/02-concepts/chat-template-explained.md)）：Qwen / Llama-2 / Llama-3 / Mistral 4 种格式完全不同；特殊 token (`<|im_start|>` 等) 是模型识别 role 边界的根基；**5 → 3 role 降维的真实根因 = chat template 不认非标准 role**（Week 1 chat-message-roles 闭环）
+13. ⭐⭐ **4 角色术语约定固化**（用户 / agent 框架 / LLM API 服务器 / LLM 模型）：覆盖整个 Day 3 笔记体系（包括对老笔记的术语审计），消除"调用方 / 客户端 / 应用层 / API / 服务器" 混用的歧义。**这是后续读 agents.py 的硬基础** —— 看到任何协议字段都能立刻定位"给哪一层"
+
+### 实战踩坑收获
+
+- **术语混乱导致用户困惑**：Day 3 中段我多次用"调用方/客户端/应用层"互换 → 用户两次反馈"不够清晰" → 倒逼我建立 4 角色权威术语表 + 审计 5 篇旧笔记。**这次踩坑直接产出 [llm-vs-api-server-architecture.md §2 术语约定]**，从此所有 smolagents 笔记必须用这套术语
+- **InferenceClientModel.generate 的 `response_format` 注释 bug**：[models.py:1570](../src/smolagents/models.py#L1570) `response_format` 被注释掉但 pre-check 还在 → 看起来是 bug 或半成品。已记入遗留问题，留作 Week 3-4 实战时验证
+- **"被动检测 vs 主动控制" 是初学者最大盲区**：用户问"既然服务器知道 stop，为什么不直接让模型输出？" → 倒逼我深挖 prompt（主动）+ stop（被动）的强依赖关系。最终产出 [model-stop-sequences.md §7 ⭐⭐ 关键澄清]
+- **"模型是逐 token 调用 N 次" 是另一个盲区**：不是"调一次拿整个回答"。理解这点后 KV cache / 流式响应 / token 计费 / stop 即时生效全打通
+
+### 笔记产出（11 篇 + 1 实验）
+
+**Day 3 主线（按教学宪法 3 层结构）**：
+- ⭐ ① [model-class-role-overview.md](notes/03-source/model-class-role-overview.md) — Model 类整体角色（3 客户 + 5 实例属性 + 方法分组 + 为什么基类不发请求）
+- ⭐ ② [model-generate-mental-model.md](notes/03-source/model-generate-mental-model.md) — `_prepare_completion_kwargs` 5 步流水线 + 三层优先级 + Day 2 闭环回收
+- ⭐ ③ [inference-client-model-impl.md](notes/03-source/inference-client-model-impl.md) — InferenceClientModel 落地：3 层继承 + ApiModel 三件武器 + generate 五件事
+
+**延伸笔记（对话驱动产出）**：
+- [python-args-kwargs.md](notes/03-source/python-args-kwargs.md) — `*args` vs `**kwargs`：tuple/dict 区别、为什么 Model 用 `**kwargs`
+- [python-sentinel-pattern.md](notes/03-source/python-sentinel-pattern.md) — Python 哨兵模式：当 None 不够用时（含 `REMOVE_PARAMETER` 设计意图）
+- ⭐ [model-stop-sequences.md](notes/03-source/model-stop-sequences.md) — 11 节深度（stop 是谁给谁 / EOS-stop-max_tokens 互补 / 双保险 / **§7 被动检测 vs 主动控制** / 兼容性 + 知识来源 + 协议碎片化）
+- [model-generate-params-explained.md](notes/03-source/model-generate-params-explained.md) — `_prepare_completion_kwargs` 7 参数详解 + OpenAI 协议字段映射
+- [model-rate-limit-and-retry.md](notes/03-source/model-rate-limit-and-retry.md) — 节流 vs 重试：调 LLM API 服务器的双层保险
+
+**02-concepts 概念笔记（建立通用心智模型）**：
+- ⭐⭐ [llm-vs-api-server-architecture.md](notes/02-concepts/llm-vs-api-server-architecture.md) — LLM 模型 vs LLM API 服务器分层 + **§2 术语约定 4 角色**
+- ⭐⭐ [llm-api-server-internals.md](notes/02-concepts/llm-api-server-internals.md) — 服务器内部 8 步流水线 + KV cache + 流式 vs 非流式
+- ⭐ [chat-template-explained.md](notes/02-concepts/chat-template-explained.md) — Chat template 翻译机制 + 4 模型格式对比 + 5→3 role 降维根因
+
+**实验脚本（1 个）**：
+- 🐞 [inference_request_trace.py](scripts/inference_request_trace.py) — 6 个 demo 用 `TraceModel(Model)` 拦截 `_prepare_completion_kwargs` 输出，亲眼看 body 结构 + 字段来源标注（兑现验收标准 ②）
+
+### 已超出原计划
+
+| 原计划要求（Day 3 当日学习目标） | 实际达到 |
+|---|---|
+| 说清 `Model.generate()` 入参 / 返回结构 | ✅ 不仅说清，还专门写 [model-generate-params-explained.md] 7 参数详解 + 速查表 |
+| 亲眼看到一次真实请求的 JSON body | ✅ [inference_request_trace.py](scripts/inference_request_trace.py) 6 个 demo 全部亲眼验证 |
+| —（计划没要求）| **建立 4 角色术语统一**（用户 / agent 框架 / LLM API 服务器 / LLM 模型），审计 5 篇旧笔记，从此所有笔记必须用这套术语 |
+| —（计划没要求）| **3 篇 02-concepts 通用心智模型**（架构分层 / 服务器内部 / chat template）—— 远超 models.py 范畴，覆盖整个 LLM 生态认知 |
+| —（计划没要求）| 揭示 stop 是"被动检测"，prompt 才是"主动控制"（initiator 最易盲区）|
+| —（计划没要求）| 揭示 5→3 role 降维的真实根因 = chat template 不认非标准 role（Week 1 → Day 3 完整闭环）|
+| —（计划没要求）| 揭示"模型是逐 token 调用 N 次"（KV cache / 流式响应 / token 计费的认知基础）|
+
+### Day 4 入场提示
+
+按计划读 [agents.py](../src/smolagents/agents.py) **上半**：`MultiStepAgent.__init__` + `run()`（约 800 行）。核心要看：
+- 外层 ReAct 循环的控制流（while + max_steps + callback + error 捕获）
+- `agent.run()` 的 `stream=True` 区别
+- `write_memory_to_messages()` —— Day 1 / Day 3 已多次提到的"翻译器"
+- 在 `run()` 设断点跟一个完整 task
+
+**预期产出**：
+- 1 篇 `multi-step-agent-role-overview.md`（必须，按宪法）
+- 1 篇 `agent-run-mental-model.md`（外循环控制流 mental model）
+- 可能 1-2 篇实现细节笔记
+
+**关键方法继续不变**：先 mental model 再实现 + 单步调试 [my_first_agent.py](scripts/my_first_agent.py) 跟 `run()` 完整跑一遍 + 用 Day 3 笔记 4 角色术语描述发生的事。
