@@ -77,6 +77,7 @@ notes/
 - ⭐ [inference-client-model-impl.md](03-source/inference-client-model-impl.md) — InferenceClientModel 落地：3 层继承（Model → ApiModel → InferenceClientModel）+ ApiModel 三件武器（client/rate_limit/retry）+ generate 五件事（pre-check / 拼 body / 节流 / retry+发请求 / 解析+stop 兜底+包 ChatMessage）。ChatMessage `raw` 字段终于有值；reasoning 模型 stop fallback；3 个意外发现
 - [model-rate-limit-and-retry.md](03-source/model-rate-limit-and-retry.md) — 节流（Rate Limiting）vs 重试（Retry）：API 走网络的双层保险。时机/问题/类比对照、节流主动预防（token bucket）、重试指数退避 + jitter 打散羊群、`retry_predicate` 只重试临时性错误（429）、"retry 包裹"=装饰器思想、本地模型为什么不需要
 - 🐞 实验脚本：[inference_request_trace.py](../scripts/inference_request_trace.py) — Day 3 段 4 验收 ② 落地：6 个 demo 用 `TraceModel(Model)` 不发请求拦截 `_prepare_completion_kwargs` 输出，亲眼看 body 结构 + 字段来源标注（最简 messages / 加 tools / stop_sequences / 三层优先级实战 / REMOVE_PARAMETER 哨兵 / role 转换 + 连续合并）
+- 📝 [day3-self-check.md](03-source/day3-self-check.md) — Day 3 自查手册：7 道题（事实记忆 / 概念应用 / 设计意图 / 跨层闭环 / 心智模型 / 跨笔记闭环 / 看会层）+ 详细答案 + 笔记溯源链接。**学习节奏自由**：盖住答案心里答 → 揭开对照 → 答错就点笔记溯源精读。配合 Day 4-5 卡壳时回来补
 
 ### 05-advanced 进阶（暂不深究，存档备用）
 - [llm-protocols-deep-dive.md](05-advanced/llm-protocols-deep-dive.md) — LLM 协议家族深入对比 ⏸️ `deferred`，时机到了再读
