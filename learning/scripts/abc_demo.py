@@ -1,7 +1,7 @@
 """
 Day 2 配套实验：abc.ABC 抽象基类手感练习
 
-配套笔记：learning/notes/03-source/python-abc-abstract-base-class.md
+配套笔记：learning/notes/03-source/python-prep/python-abc-abstract-base-class.md
 
 跑法：
   python learning/scripts/abc_demo.py

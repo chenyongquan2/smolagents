@@ -8,7 +8,7 @@ tags: [concepts, llm, api-server, architecture, mental-model, prerequisite]
 
 ## 背景 / 动机
 
-读 [model-stop-sequences.md](../03-source/model-stop-sequences.md) 时容易混淆这句话：
+读 [model-stop-sequences.md](../03-source/day3-models/model-stop-sequences.md) 时容易混淆这句话：
 
 > "prompt 是给 LLM 看的指令；stop 是给 API 服务器的指令"
 
@@ -193,7 +193,7 @@ HTTP body：
 模型看到的只是文字，它不知道这段文字来自 JSON `tools` 字段。
 ```
 
-> 💡 [tool-schema-rendering-mental-model.md](../03-source/tool-schema-rendering-mental-model.md) 讲的"**LLM 始终只看 messages**"—— 哪怕协议层有 `tools` 字段，最终也是被服务器渲染进 prompt 文本喂给模型。
+> 💡 [tool-schema-rendering-mental-model.md](../03-source/day2-tools/tool-schema-rendering-mental-model.md) 讲的"**LLM 始终只看 messages**"—— 哪怕协议层有 `tools` 字段，最终也是被服务器渲染进 prompt 文本喂给模型。
 
 #### `max_tokens` —— 服务器层的循环计数器
 
@@ -288,9 +288,9 @@ HTTP response ←                                              │
 
 | 学习内容 | 用到这个心智模型的地方 |
 |---|---|
-| [model-stop-sequences.md](../03-source/model-stop-sequences.md) | "prompt 给 LLM / stop 给服务器"双保险 |
-| [model-generate-params-explained.md](../03-source/model-generate-params-explained.md) | 7 参数中哪些是服务器层、哪些是 prompt 层 |
-| [tool-schema-rendering-mental-model.md](../03-source/tool-schema-rendering-mental-model.md) | tools 字段最终也是服务器渲染成 prompt 文本 |
+| [model-stop-sequences.md](../03-source/day3-models/model-stop-sequences.md) | "prompt 给 LLM / stop 给服务器"双保险 |
+| [model-generate-params-explained.md](../03-source/day3-models/model-generate-params-explained.md) | 7 参数中哪些是服务器层、哪些是 prompt 层 |
+| [tool-schema-rendering-mental-model.md](../03-source/day2-tools/tool-schema-rendering-mental-model.md) | tools 字段最终也是服务器渲染成 prompt 文本 |
 | [chat-message-roles.md](chat-message-roles.md) | role 是 chat template 的 token，最终被 tokenize 进模型 |
 | [model-and-protocols-overview.md](model-and-protocols-overview.md) | "调用渠道" = "去找哪个 API 服务器"，模型权重可能完全相同 |
 | 后续 Day 4-5 agents.py | agent 框架是服务器之外的**第三层**（agent → server → model）|
@@ -305,7 +305,7 @@ HTTP response ←                                              │
 
 ### 误区 ② "同一个模型在不同 provider 输出应该一致"
 
-❌ 不一定。同样的 Llama-3 部署在 HF / Together / Fireworks 上，**模型权重一致**但**服务器实现不一致**：tokenizer 版本可能不同、采样策略可能不同、`stop` 实现可能不同（详见 [model-stop-sequences.md §6.1](../03-source/model-stop-sequences.md) 原因 ②）—— 同样的 prompt 可能输出不同结果。
+❌ 不一定。同样的 Llama-3 部署在 HF / Together / Fireworks 上，**模型权重一致**但**服务器实现不一致**：tokenizer 版本可能不同、采样策略可能不同、`stop` 实现可能不同（详见 [model-stop-sequences.md §6.1](../03-source/day3-models/model-stop-sequences.md) 原因 ②）—— 同样的 prompt 可能输出不同结果。
 
 ### 误区 ③ "改 temperature 就是改模型行为"
 
@@ -313,7 +313,7 @@ HTTP response ←                                              │
 
 ### 误区 ④ "LLM API 服务器都长一样"
 
-❌ 错。OpenAI / Anthropic / HF / 自研服务器的实现细节差异巨大。这就是为什么 smolagents 要为每家写一个 [Model 子类](../03-source/model-class-role-overview.md)。
+❌ 错。OpenAI / Anthropic / HF / 自研服务器的实现细节差异巨大。这就是为什么 smolagents 要为每家写一个 [Model 子类](../03-source/day3-models/model-class-role-overview.md)。
 
 ---
 
@@ -335,9 +335,9 @@ HTTP response ←                                              │
 ## 相关链接
 
 - 应用本心智模型的笔记：
-  - [model-stop-sequences.md](../03-source/model-stop-sequences.md) — 双保险的两个主体
-  - [model-generate-params-explained.md](../03-source/model-generate-params-explained.md) — 7 参数分别属于哪一层
-  - [tool-schema-rendering-mental-model.md](../03-source/tool-schema-rendering-mental-model.md) — tools 字段的两层渲染
+  - [model-stop-sequences.md](../03-source/day3-models/model-stop-sequences.md) — 双保险的两个主体
+  - [model-generate-params-explained.md](../03-source/day3-models/model-generate-params-explained.md) — 7 参数分别属于哪一层
+  - [tool-schema-rendering-mental-model.md](../03-source/day2-tools/tool-schema-rendering-mental-model.md) — tools 字段的两层渲染
 - Week 1 概念前置：
   - [model-and-protocols-overview.md](model-and-protocols-overview.md) — Model 子类 = 调用渠道（不同 API 服务器）
   - [chat-message-roles.md](chat-message-roles.md) — role 进 chat template 进 tokenize 进模型

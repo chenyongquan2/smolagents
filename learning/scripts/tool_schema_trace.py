@@ -1,7 +1,7 @@
 """
 Day 2 段 5 配套实验：Tool 渲染的 4 种形状对比
 
-配套笔记：learning/notes/03-source/tool-schema-rendering-mental-model.md
+配套笔记：learning/notes/03-source/day2-tools/tool-schema-rendering-mental-model.md
 
 跑法：
   python learning/scripts/tool_schema_trace.py

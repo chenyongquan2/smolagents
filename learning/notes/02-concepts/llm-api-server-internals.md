@@ -230,7 +230,7 @@ LLM API 服务器步骤 ⑤ 的生成循环**本质上就是流式的**（一个
 
 **生成过程完全一样**。流式只是"提前送货"。
 
-> 💡 这就是为什么 [InferenceClientModel.generate_stream](../../../src/smolagents/models.py#L1591) 和 `generate` 共享同一个 `_prepare_completion_kwargs` —— body 完全一样，只多个 `stream=True` 标记，告诉 LLM API 服务器"用流式响应模式"。详见 [inference-client-model-impl.md §7](../03-source/inference-client-model-impl.md)。
+> 💡 这就是为什么 [InferenceClientModel.generate_stream](../../../src/smolagents/models.py#L1591) 和 `generate` 共享同一个 `_prepare_completion_kwargs` —— body 完全一样，只多个 `stream=True` 标记，告诉 LLM API 服务器"用流式响应模式"。详见 [inference-client-model-impl.md §7](../03-source/day3-models/inference-client-model-impl.md)。
 
 ---
 
@@ -273,7 +273,7 @@ agent 框架（smolagents）
 
 **没有 HTTP / 没有独立服务器进程**。"LLM API 服务器" 这个角色被 **TransformersModel 这个 Python 类承担了**（在同一个进程里）。
 
-> 💡 **Day 3 [inference-client-model-impl.md §1](../03-source/inference-client-model-impl.md)** 讲的"本地模型直接继承 Model 跳过 ApiModel" —— 现在更深一层理解：**因为本地模型不需要 ApiModel 的 HTTP/限流/重试机制**，但仍然需要做步骤 ③-⑦（chat_template / tokenize / 生成循环 / detokenize）。这些事被 transformers 库内部接管了。
+> 💡 **Day 3 [inference-client-model-impl.md §1](../03-source/day3-models/inference-client-model-impl.md)** 讲的"本地模型直接继承 Model 跳过 ApiModel" —— 现在更深一层理解：**因为本地模型不需要 ApiModel 的 HTTP/限流/重试机制**，但仍然需要做步骤 ③-⑦（chat_template / tokenize / 生成循环 / detokenize）。这些事被 transformers 库内部接管了。
 
 ### 8.3 协议无关性
 
@@ -284,7 +284,7 @@ agent 框架（smolagents）
 - 检查停止条件
 - 重复
 
-所以 smolagents 的子类（InferenceClientModel / TransformersModel / VLLMModel）虽然实现不同，**对 agent 框架暴露的接口完全相同**：传入 messages，返回 ChatMessage。这就是 [Model 基类抽象](../03-source/model-class-role-overview.md)的真正威力。
+所以 smolagents 的子类（InferenceClientModel / TransformersModel / VLLMModel）虽然实现不同，**对 agent 框架暴露的接口完全相同**：传入 messages，返回 ChatMessage。这就是 [Model 基类抽象](../03-source/day3-models/model-class-role-overview.md)的真正威力。
 
 ---
 
@@ -348,9 +348,9 @@ LLM API 服务器懂：HTTP / JSON / chat_template / 采样 / 停止 / 缓存 / 
 - 必读前置：
   - [llm-vs-api-server-architecture.md](llm-vs-api-server-architecture.md) — 4 角色术语 + 两层关系
 - 应用本心智模型的笔记：
-  - [model-stop-sequences.md §7](../03-source/model-stop-sequences.md) — stop 是被动检测，对应步骤 ⑤ 的 `matches_stop_sequence()`
-  - [model-generate-params-explained.md](../03-source/model-generate-params-explained.md) — 7 参数对应表 4 的"生效在哪步"
-  - [inference-client-model-impl.md](../03-source/inference-client-model-impl.md) — 子类如何把"通用 8 步"翻译成具体实现
+  - [model-stop-sequences.md §7](../03-source/day3-models/model-stop-sequences.md) — stop 是被动检测，对应步骤 ⑤ 的 `matches_stop_sequence()`
+  - [model-generate-params-explained.md](../03-source/day3-models/model-generate-params-explained.md) — 7 参数对应表 4 的"生效在哪步"
+  - [inference-client-model-impl.md](../03-source/day3-models/inference-client-model-impl.md) — 子类如何把"通用 8 步"翻译成具体实现
 - Week 1 概念：
   - [codeagent-vs-toolcallingagent.md §7](codeagent-vs-toolcallingagent.md) — Prompt caching 与本笔记的 KV cache 是同一机制的不同层级
 

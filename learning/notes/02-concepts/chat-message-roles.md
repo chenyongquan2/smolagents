@@ -162,7 +162,7 @@ model.complete(prompt)
 
 ## 七、连接到 PlanningStep 的"伪造 user 消息"
 
-知道 role 是 LLM 的"行为方向盘"后，就能彻底理解 [planning-mechanics.md](../03-source/planning-mechanics.md) 里讲的**伪造 user 消息**为什么能起作用：
+知道 role 是 LLM 的"行为方向盘"后，就能彻底理解 [planning-mechanics.md](../03-source/day1-memory/planning-mechanics.md) 里讲的**伪造 user 消息**为什么能起作用：
 
 - LLM 训练时**没见过两个 assistant 紧挨着**（违反 role 交替模式）
 - 框架塞一条假的 `user="Now proceed and carry out this plan."`，就把 chat template 拉回训练分布
@@ -205,7 +205,7 @@ print(tok.apply_chat_template(messages, tokenize=False))
 
 - 源码：[models.py:111](../../../src/smolagents/models.py:111) `MessageRole` enum 定义
 - 关联笔记：
-  - [../03-source/planning-mechanics.md](../03-source/planning-mechanics.md) 伪造 user 消息技法
+  - [../03-source/planning-mechanics.md](../03-source/day1-memory/planning-mechanics.md) 伪造 user 消息技法
   - [model-and-protocols-overview.md](model-and-protocols-overview.md) Chat Completion 协议来历
 
 ## 遗留问题

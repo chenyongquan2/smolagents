@@ -224,17 +224,17 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 ### 笔记产出（10 篇 + 1 实验）
 
 **Python 预习系列（3 篇）**：
-- [python-class-and-dataclass.md](notes/03-source/python-class-and-dataclass.md) — `@dataclass` / `self` / 抽象方法 / "Python 没有字段声明"
-- [python-iterables-iterators.md](notes/03-source/python-iterables-iterators.md) — 迭代协议、`iter()` / `next()` 关系、自定义类怎么实现
-- [python-generators-yield.md](notes/03-source/python-generators-yield.md) — `yield` 暂停-恢复模型、`Generator[X]` 注解
+- [python-class-and-dataclass.md](notes/03-source/python-prep/python-class-and-dataclass.md) — `@dataclass` / `self` / 抽象方法 / "Python 没有字段声明"
+- [python-iterables-iterators.md](notes/03-source/python-prep/python-iterables-iterators.md) — 迭代协议、`iter()` / `next()` 关系、自定义类怎么实现
+- [python-generators-yield.md](notes/03-source/python-prep/python-generators-yield.md) — `yield` 暂停-恢复模型、`Generator[X]` 注解
 
 **memory.py 源码系列（6 篇）**：
-- [memory-data-structures.md](notes/03-source/memory-data-structures.md) — 鸟瞰 + Step 家族 4 个简单类
-- [planning-mechanics.md](notes/03-source/planning-mechanics.md) — PlanningStep 全机制 + 4 个遗留问题已解答
-- ⭐ [action-step-anatomy.md](notes/03-source/action-step-anatomy.md) — ActionStep 13 字段 + 5 分支 to_messages
-- ⭐ [final-answer-step.md](notes/03-source/final-answer-step.md) — 事件 vs 记录 + Day 1 全图谱
-- [agent-memory-container.md](notes/03-source/agent-memory-container.md) — AgentMemory 5 方法 + reset 设计
-- [callback-registry.md](notes/03-source/callback-registry.md) — Observer 模式 + MRO walk
+- [memory-data-structures.md](notes/03-source/day1-memory/memory-data-structures.md) — 鸟瞰 + Step 家族 4 个简单类
+- [planning-mechanics.md](notes/03-source/day1-memory/planning-mechanics.md) — PlanningStep 全机制 + 4 个遗留问题已解答
+- ⭐ [action-step-anatomy.md](notes/03-source/day1-memory/action-step-anatomy.md) — ActionStep 13 字段 + 5 分支 to_messages
+- ⭐ [final-answer-step.md](notes/03-source/day1-memory/final-answer-step.md) — 事件 vs 记录 + Day 1 全图谱
+- [agent-memory-container.md](notes/03-source/day1-memory/agent-memory-container.md) — AgentMemory 5 方法 + reset 设计
+- [callback-registry.md](notes/03-source/day1-memory/callback-registry.md) — Observer 模式 + MRO walk
 
 **通用概念（1 篇）**：
 - [chat-message-roles.md](notes/02-concepts/chat-message-roles.md) — role 标记的 LLM 训练原理
@@ -313,16 +313,16 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 ### 笔记产出（8 篇 + 3 实验）
 
 **Python 预习系列（3 篇新增）**：
-- [python-init-subclass.md](notes/03-source/python-init-subclass.md) — `__init_subclass__` 钩子机制（vs `__init__` / metaclass / `super` 链式传递）
-- [python-abc-abstract-base-class.md](notes/03-source/python-abc-abstract-base-class.md) — `abc.ABC` + `@abstractmethod` 硬约束 vs 软约束
-- [python-class-vs-instance-attributes.md](notes/03-source/python-class-vs-instance-attributes.md) — 类属性 vs 实例属性，回答"Tool 的 name 到底是哪种"
+- [python-init-subclass.md](notes/03-source/python-prep/python-init-subclass.md) — `__init_subclass__` 钩子机制（vs `__init__` / metaclass / `super` 链式传递）
+- [python-abc-abstract-base-class.md](notes/03-source/python-prep/python-abc-abstract-base-class.md) — `abc.ABC` + `@abstractmethod` 硬约束 vs 软约束
+- [python-class-vs-instance-attributes.md](notes/03-source/python-prep/python-class-vs-instance-attributes.md) — 类属性 vs 实例属性，回答"Tool 的 name 到底是哪种"
 
 **Day 2 tools.py 系列（5 篇新增，宪法 3 层结构）**：
-- ⭐ [tool-class-role-overview.md](notes/03-source/tool-class-role-overview.md) — Tool 类整体角色（3 客户 + 4 类属性 + 4 生命周期组）
-- ⭐ [tool-lifecycle-checks-mental-model.md](notes/03-source/tool-lifecycle-checks-mental-model.md) — 出厂/上岗两次质检（含实现细节速查）
-- ⭐ [tool-schema-rendering-mental-model.md](notes/03-source/tool-schema-rendering-mental-model.md) — 一份数据 4 种渲染形状（含修正之前误解）
-- [tool-input-nullable.md](notes/03-source/tool-input-nullable.md) — JSON Schema nullable 含义 + 双源真相对账
-- [tool-decorator-implementation.md](notes/03-source/tool-decorator-implementation.md) — `@tool` 装饰器源码验证 Week 1 三个结论 + 2 个延伸洞察
+- ⭐ [tool-class-role-overview.md](notes/03-source/day2-tools/tool-class-role-overview.md) — Tool 类整体角色（3 客户 + 4 类属性 + 4 生命周期组）
+- ⭐ [tool-lifecycle-checks-mental-model.md](notes/03-source/day2-tools/tool-lifecycle-checks-mental-model.md) — 出厂/上岗两次质检（含实现细节速查）
+- ⭐ [tool-schema-rendering-mental-model.md](notes/03-source/day2-tools/tool-schema-rendering-mental-model.md) — 一份数据 4 种渲染形状（含修正之前误解）
+- [tool-input-nullable.md](notes/03-source/day2-tools/tool-input-nullable.md) — JSON Schema nullable 含义 + 双源真相对账
+- [tool-decorator-implementation.md](notes/03-source/day2-tools/tool-decorator-implementation.md) — `@tool` 装饰器源码验证 Week 1 三个结论 + 2 个延伸洞察
 
 **实验脚本（3 个）**：
 - [init_subclass_demo.py](scripts/init_subclass_demo.py) — 6 个独立 demo 验证 `__init_subclass__` 各种行为（含 smolagents wrap 模式仿写）
@@ -372,7 +372,7 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 1. **Model 基类 = "调用渠道" 抽象 + 不发请求**：基类只管"拼 body + 接口契约"，差异（HTTP / 本地推理 / 云 SDK）全在子类。`generate` 是 `raise NotImplementedError` 软约束，**子类必须实现**
 2. **`_prepare_completion_kwargs` 5 步流水线**：① 清洗 messages → ② 写 specific 参数 → ③ caller kwargs → ④ self.kwargs 压舱石 → ⑤ 返回。**最早写入的优先级最低**（"用户意图最高 vs 框架默认最低"）
 3. ⭐ **`self.kwargs` = 压舱石**：实例化时存的默认参数**最高优先级**，最后一步覆盖一切。配合哨兵 `REMOVE_PARAMETER` 还能**主动删字段**（区分"传 None"和"字段不存在"）
-4. ⭐⭐ **Day 2 → Day 3 闭环回收**：HTTP `tools` 字段就在 [models.py:540](../src/smolagents/models.py#L540) `_prepare_completion_kwargs` 步骤 ② 调 [`get_tool_json_schema`](../src/smolagents/models.py#L288) 渲染。Day 2 [tool-schema-rendering-mental-model.md](notes/03-source/tool-schema-rendering-mental-model.md) 的预言完全验证
+4. ⭐⭐ **Day 2 → Day 3 闭环回收**：HTTP `tools` 字段就在 [models.py:540](../src/smolagents/models.py#L540) `_prepare_completion_kwargs` 步骤 ② 调 [`get_tool_json_schema`](../src/smolagents/models.py#L288) 渲染。Day 2 [tool-schema-rendering-mental-model.md](notes/03-source/day2-tools/tool-schema-rendering-mental-model.md) 的预言完全验证
 5. **3 层继承的边界**：Model（拼 body）→ ApiModel（走网络共享：client + rate_limit + retry）→ InferenceClientModel（HF 特定）。**走不走网络是清晰分界线**，本地模型直接继承 Model 跳过 ApiModel
 6. **InferenceClientModel.generate 五件事**：① pre-check 协议兼容 → ② 拼 body（含 `convert_images_to_image_urls=True` HF 固定决策）→ ③ 节流 → ④ retry 包裹下真发请求 → ⑤ 解析 + ⭐ stop fallback strip + 包 ChatMessage
 7. ⭐ **stop_sequences 的双保险真正含义** = LLM 模型 + LLM API 服务器**两个不同主体协同**，不是"用户保险 + 框架保险"。**stop 是被动检测，prompt 才是主动控制** —— 服务器不能强迫模型输出 stop 字符串，模型必须被 prompt 教过才会输出
@@ -396,16 +396,16 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 ### 笔记产出（11 篇 + 1 实验）
 
 **Day 3 主线（按教学宪法 3 层结构）**：
-- ⭐ ① [model-class-role-overview.md](notes/03-source/model-class-role-overview.md) — Model 类整体角色（3 客户 + 5 实例属性 + 方法分组 + 为什么基类不发请求）
-- ⭐ ② [model-generate-mental-model.md](notes/03-source/model-generate-mental-model.md) — `_prepare_completion_kwargs` 5 步流水线 + 三层优先级 + Day 2 闭环回收
-- ⭐ ③ [inference-client-model-impl.md](notes/03-source/inference-client-model-impl.md) — InferenceClientModel 落地：3 层继承 + ApiModel 三件武器 + generate 五件事
+- ⭐ ① [model-class-role-overview.md](notes/03-source/day3-models/model-class-role-overview.md) — Model 类整体角色（3 客户 + 5 实例属性 + 方法分组 + 为什么基类不发请求）
+- ⭐ ② [model-generate-mental-model.md](notes/03-source/day3-models/model-generate-mental-model.md) — `_prepare_completion_kwargs` 5 步流水线 + 三层优先级 + Day 2 闭环回收
+- ⭐ ③ [inference-client-model-impl.md](notes/03-source/day3-models/inference-client-model-impl.md) — InferenceClientModel 落地：3 层继承 + ApiModel 三件武器 + generate 五件事
 
 **延伸笔记（对话驱动产出）**：
-- [python-args-kwargs.md](notes/03-source/python-args-kwargs.md) — `*args` vs `**kwargs`：tuple/dict 区别、为什么 Model 用 `**kwargs`
-- [python-sentinel-pattern.md](notes/03-source/python-sentinel-pattern.md) — Python 哨兵模式：当 None 不够用时（含 `REMOVE_PARAMETER` 设计意图）
-- ⭐ [model-stop-sequences.md](notes/03-source/model-stop-sequences.md) — 11 节深度（stop 是谁给谁 / EOS-stop-max_tokens 互补 / 双保险 / **§7 被动检测 vs 主动控制** / 兼容性 + 知识来源 + 协议碎片化）
-- [model-generate-params-explained.md](notes/03-source/model-generate-params-explained.md) — `_prepare_completion_kwargs` 7 参数详解 + OpenAI 协议字段映射
-- [model-rate-limit-and-retry.md](notes/03-source/model-rate-limit-and-retry.md) — 节流 vs 重试：调 LLM API 服务器的双层保险
+- [python-args-kwargs.md](notes/03-source/python-prep/python-args-kwargs.md) — `*args` vs `**kwargs`：tuple/dict 区别、为什么 Model 用 `**kwargs`
+- [python-sentinel-pattern.md](notes/03-source/python-prep/python-sentinel-pattern.md) — Python 哨兵模式：当 None 不够用时（含 `REMOVE_PARAMETER` 设计意图）
+- ⭐ [model-stop-sequences.md](notes/03-source/day3-models/model-stop-sequences.md) — 11 节深度（stop 是谁给谁 / EOS-stop-max_tokens 互补 / 双保险 / **§7 被动检测 vs 主动控制** / 兼容性 + 知识来源 + 协议碎片化）
+- [model-generate-params-explained.md](notes/03-source/day3-models/model-generate-params-explained.md) — `_prepare_completion_kwargs` 7 参数详解 + OpenAI 协议字段映射
+- [model-rate-limit-and-retry.md](notes/03-source/day3-models/model-rate-limit-and-retry.md) — 节流 vs 重试：调 LLM API 服务器的双层保险
 
 **02-concepts 概念笔记（建立通用心智模型）**：
 - ⭐⭐ [llm-vs-api-server-architecture.md](notes/02-concepts/llm-vs-api-server-architecture.md) — LLM 模型 vs LLM API 服务器分层 + **§2 术语约定 4 角色**

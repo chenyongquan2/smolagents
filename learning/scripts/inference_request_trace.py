@@ -2,10 +2,10 @@
 Day 3 段 4 配套实验：抓真实 HTTP body 验证 _prepare_completion_kwargs 全流程
 
 配套笔记：
-  - learning/notes/03-source/model-generate-mental-model.md  (5 步流水线)
-  - learning/notes/03-source/model-generate-params-explained.md  (7 参数详解)
-  - learning/notes/03-source/model-stop-sequences.md  (stop 字段去向)
-  - learning/notes/03-source/python-sentinel-pattern.md  (REMOVE_PARAMETER)
+  - learning/notes/03-source/day3-models/model-generate-mental-model.md  (5 步流水线)
+  - learning/notes/03-source/day3-models/model-generate-params-explained.md  (7 参数详解)
+  - learning/notes/03-source/day3-models/model-stop-sequences.md  (stop 字段去向)
+  - learning/notes/03-source/python-prep/python-sentinel-pattern.md  (REMOVE_PARAMETER)
 
 跑法：
   C:/workspace/smolagents/.venv/Scripts/python.exe learning/scripts/inference_request_trace.py

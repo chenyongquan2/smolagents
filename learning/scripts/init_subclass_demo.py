@@ -1,7 +1,7 @@
 """
 Day 2 配套实验：__init_subclass__ 钩子手感练习
 
-配套笔记：learning/notes/03-source/python-init-subclass.md
+配套笔记：learning/notes/03-source/python-prep/python-init-subclass.md
 
 跑法：
   python learning/scripts/init_subclass_demo.py

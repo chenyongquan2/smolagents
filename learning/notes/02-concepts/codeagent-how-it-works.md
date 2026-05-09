@@ -45,7 +45,7 @@ CodeAgent 工作机制 = **预定义工具（原子操作）+ LLM 写 Python 代
 
 **LLM 模型不会神奇地知道你的 Python 环境里有什么** —— 必须**被告知**。
 
-📚 详见 [tool-schema-rendering-mental-model.md](../03-source/tool-schema-rendering-mental-model.md)（Day 2 写过的 4 种渲染形态）
+📚 详见 [tool-schema-rendering-mental-model.md](../03-source/day2-tools/tool-schema-rendering-mental-model.md)（Day 2 写过的 4 种渲染形态）
 
 ---
 
@@ -285,7 +285,7 @@ CodeAgent 的"prompt + 沙箱 + 反馈"= smolagents 反复出现的设计哲学�
 **同一原则反复**：
 > **永远不要单独信任 LLM 的"意愿"。给它提示 + 给它硬约束 + 给它错误反馈**。
 
-📚 [model-stop-sequences.md §7](../03-source/model-stop-sequences.md)（被动检测 vs 主动控制 —— 同一心智模型）
+📚 [model-stop-sequences.md §7](../03-source/day3-models/model-stop-sequences.md)（被动检测 vs 主动控制 —— 同一心智模型）
 
 ---
 
@@ -324,8 +324,8 @@ CodeAgent 的"prompt + 沙箱 + 反馈"= smolagents 反复出现的设计哲学�
   - [llm-vs-api-server-architecture.md](llm-vs-api-server-architecture.md) — 4 角色术语
   - [chat-template-explained.md](chat-template-explained.md) — messages → token
 - 同构模式参照：
-  - [model-stop-sequences.md §7](../03-source/model-stop-sequences.md) — 被动检测 vs 主动控制（最核心同构）
-  - [planning-mechanics.md](../03-source/planning-mechanics.md) — PlanningStep 也是 prompt 教 + stop 截断
+  - [model-stop-sequences.md §7](../03-source/day3-models/model-stop-sequences.md) — 被动检测 vs 主动控制（最核心同构）
+  - [planning-mechanics.md](../03-source/day1-memory/planning-mechanics.md) — PlanningStep 也是 prompt 教 + stop 截断
 - Day 4-6 准备读：
   - [code_agent.yaml](../../../src/smolagents/prompts/code_agent.yaml) — system prompt 模板
   - [agents.py](../../../src/smolagents/agents.py) — Day 4-5 主菜

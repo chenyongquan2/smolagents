@@ -89,7 +89,7 @@ agent 框架发的：           LLM 模型实际看到的：
 
 **4 个模型，4 种完全不同的拼法**。每家都是模型训练时**烧死**的格式。
 
-> 💡 **没有统一标准**。chat template 是 LLM 圈"协议碎片化"的另一个体现（类似 [model-stop-sequences.md §9.3](../03-source/model-stop-sequences.md) 讲的 stop 字段名碎片化）。
+> 💡 **没有统一标准**。chat template 是 LLM 圈"协议碎片化"的另一个体现（类似 [model-stop-sequences.md §9.3](../03-source/day3-models/model-stop-sequences.md) 讲的 stop 字段名碎片化）。
 
 ---
 
@@ -149,7 +149,7 @@ LLM 模型：    只看到 token 序列，根本不知道有过 messages 结构
 
 ### HF transformers 库的 `apply_chat_template`
 
-如果你用本地模型（[TransformersModel](../03-source/inference-client-model-impl.md)），`transformers` 库的 tokenizer 自带这个方法：
+如果你用本地模型（[TransformersModel](../03-source/day3-models/inference-client-model-impl.md)），`transformers` 库的 tokenizer 自带这个方法：
 
 ```python
 from transformers import AutoTokenizer
@@ -185,7 +185,7 @@ print(text)
 
 ## 8. ⭐ agent 场景里的特殊关切：`tools` 字段也走 chat template
 
-回顾 Day 2 [tool-schema-rendering-mental-model.md](../03-source/tool-schema-rendering-mental-model.md)：HTTP `tools` 字段不是直接喂模型，而是**被 LLM API 服务器渲染进 system prompt 文本**，再走 chat template 喂模型。
+回顾 Day 2 [tool-schema-rendering-mental-model.md](../03-source/day2-tools/tool-schema-rendering-mental-model.md)：HTTP `tools` 字段不是直接喂模型，而是**被 LLM API 服务器渲染进 system prompt 文本**，再走 chat template 喂模型。
 
 ```
 HTTP body:
@@ -213,7 +213,7 @@ LLM API 服务器步骤 ③：
 
 ## 9. role 转换的真实影响（呼应 Day 3 mental-model）
 
-回顾 [model-generate-mental-model.md §5](../03-source/model-generate-mental-model.md)：smolagents 的 5 个内部 role（USER / ASSISTANT / SYSTEM / TOOL_CALL / TOOL_RESPONSE）经 `tool_role_conversions` **降维成 3 个**（OpenAI 协议认的 user/assistant/system）。
+回顾 [model-generate-mental-model.md §5](../03-source/day3-models/model-generate-mental-model.md)：smolagents 的 5 个内部 role（USER / ASSISTANT / SYSTEM / TOOL_CALL / TOOL_RESPONSE）经 `tool_role_conversions` **降维成 3 个**（OpenAI 协议认的 user/assistant/system）。
 
 **为什么降维？因为 LLM API 服务器的 chat template 只认 OpenAI 标准 3 role**：
 
@@ -227,7 +227,7 @@ LLM API 服务器步骤 ③：
 
 **不降维就传过去**：服务器的 chat template **不认识** "tool-call" / "tool-response" → 报错或忽略。
 
-> 💡 **所以"5 → 3 降维"的真实根因 = chat template 不支持 5 role**。Day 3 [model-generate-mental-model.md](../03-source/model-generate-mental-model.md) 当时只说"OpenAI 协议没这两个 role"，本笔记把根因挖到 chat template 层。
+> 💡 **所以"5 → 3 降维"的真实根因 = chat template 不支持 5 role**。Day 3 [model-generate-mental-model.md](../03-source/day3-models/model-generate-mental-model.md) 当时只说"OpenAI 协议没这两个 role"，本笔记把根因挖到 chat template 层。
 
 ---
 
@@ -289,8 +289,8 @@ agent 框架                    LLM API 服务器                  LLM 模型
   - [llm-vs-api-server-architecture.md](llm-vs-api-server-architecture.md) — 4 角色术语
   - [llm-api-server-internals.md](llm-api-server-internals.md) §3 — chat template 在服务器流水线的位置
 - 应用本心智模型的笔记：
-  - [tool-schema-rendering-mental-model.md](../03-source/tool-schema-rendering-mental-model.md) — tools 字段的 chat template 渲染
-  - [model-generate-mental-model.md §5](../03-source/model-generate-mental-model.md) — 5 → 3 role 降维的根因
+  - [tool-schema-rendering-mental-model.md](../03-source/day2-tools/tool-schema-rendering-mental-model.md) — tools 字段的 chat template 渲染
+  - [model-generate-mental-model.md §5](../03-source/day3-models/model-generate-mental-model.md) — 5 → 3 role 降维的根因
   - [model-and-protocols-overview.md](model-and-protocols-overview.md) — Chat Completion 协议家族
 - 源码：
   - [models.py:332 `get_clean_message_list`](../../../src/smolagents/models.py#L332) — smolagents 在客户端做的 messages 整理（**不**应用 chat template，留给服务器）

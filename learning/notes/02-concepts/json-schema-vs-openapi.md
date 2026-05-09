@@ -8,7 +8,7 @@ tags: [protocol, json, json-schema, openapi, mental-model, prereqs]
 
 ## 背景 / 动机
 
-读 [tool-input-nullable.md](../03-source/tool-input-nullable.md) 时遇到的疑问：
+读 [tool-input-nullable.md](../03-source/day2-tools/tool-input-nullable.md) 时遇到的疑问：
 
 > `nullable` 字段到底是 JSON 本身的，还是 JSON Schema 的，还是 OpenAPI 的？
 
@@ -218,7 +218,7 @@ OpenAPI 3.1 决定**完全对齐 JSON Schema**（不再做子集限制），所�
 
 ### 结论：**`nullable` 是 OpenAPI 3.0 的发明，不是 JSON 的，也不是 JSON Schema 的**
 
-**这就是为什么 [tool-input-nullable.md](../03-source/tool-input-nullable.md) 之前说"JSON Schema 标准"是不准确的** —— 严格说应该是"OpenAPI 3.0 字段（基于 JSON Schema 但加了扩展）"。
+**这就是为什么 [tool-input-nullable.md](../03-source/day2-tools/tool-input-nullable.md) 之前说"JSON Schema 标准"是不准确的** —— 严格说应该是"OpenAPI 3.0 字段（基于 JSON Schema 但加了扩展）"。
 
 ---
 
@@ -340,8 +340,8 @@ schema_c = {"name": "Beijing"}                             # ?
 ## 相关链接
 
 - 相关笔记：
-  - [tool-input-nullable.md](../03-source/tool-input-nullable.md) — smolagents 里 nullable 字段的具体用法
-  - [tool-schema-rendering-mental-model.md](../03-source/tool-schema-rendering-mental-model.md) — Tool 渲染成 OpenAPI 风格 JSON 的过程
+  - [tool-input-nullable.md](../03-source/day2-tools/tool-input-nullable.md) — smolagents 里 nullable 字段的具体用法
+  - [tool-schema-rendering-mental-model.md](../03-source/day2-tools/tool-schema-rendering-mental-model.md) — Tool 渲染成 OpenAPI 风格 JSON 的过程
   - [model-and-protocols-overview.md](model-and-protocols-overview.md) — Chat Completion 协议（也是 OpenAPI 风格）
   - [05-advanced/llm-protocols-deep-dive.md](../05-advanced/llm-protocols-deep-dive.md) — `deferred`，协议家族深入对比
 - 外部参考：
