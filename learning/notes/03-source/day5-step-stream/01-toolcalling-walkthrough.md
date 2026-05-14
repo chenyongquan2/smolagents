@@ -515,6 +515,59 @@ ActionOutput(None, F)
 
 > 💡 **`max_tool_threads=None` 的默认行为**：`ThreadPoolExecutor(None)` 等价于 `ThreadPoolExecutor(min(32, os.cpu_count() + 4))` —— Python 标准库的合理默认。IO bound（HTTP 请求）32 并发是好的；CPU bound 可能要手动调小。
 
+### 🤔 关键问题：LLM 什么时候会一次返回多个 tool_calls？
+
+上面的"并行多 tool call"场景**前提**是 LLM 一次响应里**真的返回了多个** `tool_calls`。但 LLM 不一定这么做 —— 它可能选择**每步只调 1 个、跑多轮**。这两种模式都是 function calling 协议支持的：
+
+| 模式 | 一轮 LLM 响应里返回 | 何时发生 |
+|---|---|---|
+| **Parallel tool calling** | **多个** tool_calls 在同一个 list | LLM 判断 N 个调用相互独立 |
+| **Sequential（多轮串行）** | **1 个** tool_calls | LLM 判断需要看上一个结果再决定下一步 |
+
+#### 协议演进时间线
+
+| 时间 | 事件 |
+|---|---|
+| 2023.6 | OpenAI 发布 function calling —— **`function_call` 字段单数**（一次只能调一个） |
+| 2023.11 | OpenAI 发布 **`tool_calls` 字段（复数 list）+ parallel function calling** —— GPT-4 Turbo 引入 |
+
+旧 `function_call`（单数）已 deprecated，smolagents 永远走 `tool_calls`（复数）—— **单调用只是 N=1 的特例**。
+
+#### LLM 怎么选？3 个因素
+
+1. **模型能力**：GPT-4 / Claude 3.5+ / Qwen2.5+ 倾向 parallel；老模型 / 小模型偏好 sequential
+2. **任务性质**：
+   - 天然独立的（"查 3 个城市温度"）→ LLM 倾向 parallel
+   - 依赖前一步结果的（"先查天气再决定买不买伞"）→ 必然 sequential
+3. **system_prompt 引导**：[toolcalling_agent.yaml](../../../../src/smolagents/prompts/toolcalling_agent.yaml) 教 LLM 怎么用，可能影响倾向
+
+#### compare_agents.py 实测数据
+
+[questions.md "已解"](../../questions.md) 条目实测：
+
+> **ToolCallingAgent = 5 步**（1 TaskStep + 4 ActionStep）—— 串行
+> 拆解：Beijing / Tokyo / Singapore 各 1 步 + final_answer 1 步
+
+**`Qwen2.5-72B-Instruct` 在这个任务下选了串行**，没用 parallel。如果换成 GPT-4 跑同一任务，可能会变成：
+
+```
+Step 1: tool_calls = [get_temperature("Beijing"),
+                       get_temperature("Tokyo"),
+                       get_temperature("Singapore")]  ← 一次 parallel 调 3 个
+Step 2: tool_calls = [final_answer(86.0)]
+```
+
+总 LLM 调用次数：**2** 而不是 4 —— 这就是为什么"模型不同 LLM 调用次数差很多"。
+
+#### 常见误解
+
+❌ **"ToolCallingAgent 一定每步只调一个工具"**
+✅ **每步可以调多个工具，但是否真调多个 = LLM 决定（不是框架决定）**
+
+也就是 §10 "4 步 vs 1 步" 那个数据，**前提是 Qwen2.5 这种倾向串行的模型**。换 GPT-4 数据会不同。
+
+> 💡 **smolagents 框架对此完全被动** —— `process_tool_calls` 内部 `if len(parallel_calls) == 1` 自动适配，**LLM 给几个就跑几个**，不强求模式。
+
 ---
 
 ## 🌟 番外篇 3 · state 储物柜机制（跨步骤传图片）
