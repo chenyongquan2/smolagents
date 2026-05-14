@@ -22,7 +22,8 @@ notes/
 │   ├── day2-tools/                    ← Day 2 · tools.py
 │   ├── day3-models/                   ← Day 3 · models.py
 │   ├── day4-agents/                   ← Day 4 · agents.py 上半（文件名带 00/01/.. 前缀，即学习顺序）
-│   └── day5-step-stream/              ← Day 5 · agents.py 下半 ⭐（_step_stream 心脏）
+│   ├── day5-step-stream/              ← Day 5 · agents.py 下半 ⭐（_step_stream 心脏）
+│   └── day6-executor/                 ← Day 6 · local_python_executor.py（沙箱浏览）
 ├── 04-experiments/                    ← 第 3 周：动手实验记录
 ├── 05-advanced/                       ← 第 4 周：进阶专题
 └── questions.md                       ← 悬而未决的问题清单
@@ -112,6 +113,11 @@ notes/
 - ⭐⭐ 03 [impl-diff-deep-dive.md](03-source/day5-step-stream/03-impl-diff-deep-dive.md) — **两子类逐环节差异对比（差异聚焦表）**。读完 01 / 02 后用本篇把两个剧本并排放，差异落点逐一打通。⭐ 3 个根本差异链式放大图（system_prompt → LLM 输出形态 → 执行环境）+ 一图压缩两条调用链并排 + **9 个差异维度**逐项对比：① LLM 输出格式（function calling / 自由文本 / structured 3 路径）② 解析路径（结构化字段 vs 3 把刀）③ 执行机制（execute_tool_call 5 层嵌套 vs python_executor 沙箱）④ 跨步骤状态（state 储物柜 vs Python namespace）⑤ 事件流（3 下 vs 2 下对讲机响 + UI 影响）⑥ 错误处理（5 种 vs 3 种异常 + Day 4 错误 3 层定位）⑦ memory_step 字段差异（code_action 独有 + action_output 不一致）⑧ 步数与代价（⭐⭐ 为什么 parallel 救不了 ToolCallingAgent 根本成本 + 3 维度决定 LLM 调用次数）⑨ **能力边界（点菜模式 vs 小厨房模式 / 9 个具体边界点 / 设计哲学）** + ⭐ 实战选型决策树 + Week 1 + Day 1-4 + Day 5 01/02 闭环回收 12 处。**Day 5 验收 ② 兑现：对比 CodeAgent vs ToolCallingAgent 在解析和执行两环节的代码差异**
 - ⭐⭐ 04 [debugging-walkthrough.md](03-source/day5-step-stream/04-debugging-walkthrough.md) — **Day 5 单步调试操作手册：把 01/02 演出版变成肌肉记忆**。准备阶段（代理 / launch.json justMyCode 检查）+ ⭐ **第一组 4 个核心断点**（ToolCalling B/D/F/G + CodeAgent B'/D'/E'/F'）覆盖 5 步骨架 + 3 个红色推测点 + 5 个 Watch 表达式 + ToolCallingAgent 跑通操作流程（Step 1-4 每步亲眼验证 5 件事）+ CodeAgent 跑通操作流程（1 步 4 件事）+ 跟 01/02 演出版对照表（断点 ↔ 幕）+ 进阶 8 个断点（完整 10 幕 / 8 幕剧本）+ 常见坑速查 + 快捷键速查 + ⚠️ 实证状态诚实标记 + **Day 5 闭合宣告**（验收 ① ② ③ 全部 ✓）。**Day 5 验收 ③ 兑现：拿 compare_agents.py 单步走，每个分歧点都知道源码位置**
 - 📝 [self-check.md](03-source/day5-step-stream/self-check.md) — **Day 5 自查手册：14 道题 + 详细答案 + 笔记溯源**。覆盖 5 篇 Day 5 笔记 + 概念笔记。题目分布按难度（★/★★/★★★/★★★★）+ 类型（事实记忆 / 概念应用 / 设计意图 / 跨层闭环 / 实战应用 / "看会"层）。包含 ⭐⭐ Q10（parallel 救不了 ToolCallingAgent 根本成本）+ Q11（工具本质都是 Python callable）+ Q12（默写 4 步精确剧本）+ Q14 "看会"层（设计 HybridAgent 怎么改）。**Day 5 闭合自检 / 自评 12-14 题对 = 完全掌握**
+
+**Day 6 · local_python_executor.py 系列**（**浏览即可 / 严格按顺序：00 → 01 → self-check**）：
+- ⭐⭐ 00 [sandbox-role-overview.md](03-source/day6-executor/00-sandbox-role-overview.md) — **`LocalPythonExecutor` 沙箱整体角色 + 3 层防御 mental model**。一句话定调（受限 AST 解释器，不直接 exec）+ 沙箱在整个系统位置图（接 Day 5 02 第 4 幕）+ ⭐⭐ **3 层防御**：层 1 白名单 import（BASE_BUILTIN_MODULES 11 模块 + DANGEROUS_MODULES 黑名单 + check_import_authorized）/ 层 2 危险 builtins 拦截（nodunder_getattr + DANGEROUS_FUNCTIONS + safer_eval）/ 层 3 资源限制（timeout 30s + MAX_OPERATIONS + MAX_WHILE_ITERATIONS）+ BASE_PYTHON_TOOLS 默认内置工具清单 + AST 解释器入门（为什么不直接 exec）+ PythonExecutor 抽象类 vs LocalPythonExecutor / 远程 executor + 总体执行流程 5 步骨架 + ⚠️ 沙箱不是 100% 安全 4 个风险点。**Day 5 02 第 4 幕"代码助手老沙"的内部全揭秘**
+- ⭐⭐ 01 [evaluate-python-code-walkthrough.md](03-source/day6-executor/01-evaluate-python-code-walkthrough.md) — **代码助手老沙的内部：evaluate_python_code 5 幕剧本**。延续 Day 5 02 同任务（巴黎/东京/新加坡温度）+ 6 件道具（code / static_tools / custom_tools / state / authorized_imports / timeout_seconds）+ 5 幕逐个展开：① ast.parse 语法解析 ② 初始化 state（_print_outputs / _operations_count）③ ⭐ 包装 final_answer → raise FinalAnswerException ④ ⭐⭐ 遍历 AST 节点 evaluate_ast 分发 30+ evaluator（含 3 个子幕追踪 temps / max_temp / final_answer 的执行）⑤ 捕获异常返回 CodeOutput + ⭐ FinalAnswerException 继承 BaseException 而非 Exception 的细节 + 一图压缩 + 跟 Day 5 02 第 4 幕的 5 个接缝对照。**Day 5 02 第 4 幕黑盒完全打开**
+- 📝 [self-check.md](03-source/day6-executor/self-check.md) — **Day 6 自查手册：9 道题 + 详细答案 + 笔记溯源**。题量较少（vs Day 5 的 14 题）因为 LEARNING_PLAN "浏览即可 / 层次 1"。包含 ⭐⭐ Q5（FinalAnswerException 为什么用异常不用返回值 + BaseException vs Exception 细节）+ Q7（PythonExecutor 抽象类 vs 远程 executor 统一接口）+ Q9 跨层闭环（追踪 final_answer 完整路径）。**Day 6 闭合 / 7-9 题对 = 沙箱浏览到位**
 
 ### 05-advanced 进阶（暂不深究，存档备用）
 - [llm-protocols-deep-dive.md](05-advanced/llm-protocols-deep-dive.md) — LLM 协议家族深入对比 ⏸️ `deferred`，时机到了再读
