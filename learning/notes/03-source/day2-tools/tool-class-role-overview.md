@@ -6,6 +6,8 @@ tags: [smolagents, tools, overview, mental-model, source-reading]
 
 # Tool 类角色概览：先建 mental model，再读实现
 
+> 💡 **延伸阅读**：[tools-are-python-callables.md](../../02-concepts/tools-are-python-callables.md) — 把 Tool 类作为"统一抽象层"的设计胜利单独抽出来讲（Day 2 + Day 5 的跨日洞察）。
+
 ## 背景 / 动机
 
 读 [tools.py](../../../../src/smolagents/tools.py) 时，**先不要逐行读 `validate_arguments` 那 80 多行的实现**。

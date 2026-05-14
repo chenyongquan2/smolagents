@@ -12,6 +12,18 @@ tags: [questions, todo]
 
 ## 当前未解
 
+### 🔬 Day 5 待实证（HF 暂访问不了，调试推迟）
+
+01b [toolcalling-walkthrough.md](03-source/day5-step-stream/01-toolcalling-walkthrough.md) 三个"我推演但没实证"的点：
+
+- [ ] **第 2 幕 · `arguments` 字段类型**：断点 [agents.py:1320](../../src/smolagents/agents.py#L1320) 时，`chat_message.tool_calls[0].function.arguments` 是 **str (`'{"city": "Beijing"}'`)** 还是 **dict**？
+  - 假设：是 str，所以第 3 幕需要 `parse_json_if_needed` 转 dict
+  - 验证方法：跑 compare_agents.py ToolCallingAgent，断点 B 看类型
+- [ ] **第 4d 幕 · `memory_step.tool_calls` 写回时机**：断点 [agents.py:1436](../../src/smolagents/agents.py#L1436) 命中时，`memory_step.tool_calls` 是 `None` 还是已经是 list？
+  - 假设：是 `None`（这一行才赋值）
+- [ ] **state 储物柜闭环（番外 3）**：跨步骤传 `AgentImage` 时，LLM 真能在下一轮输出 `{"image_path": "image.png"}` 触发 `_substitute_state_variables` 替换吗？
+  - 验证方法：写个返回 `AgentImage` 的假 tool + 后续问 LLM "describe this image"，跑两步看 messages
+
 - [ ] **★★★ 多步 agent 怎么知道该停？** —— `llm_should_continue()` 在 smolagents 里是怎么实现的？是看 LLM 是否调用了 `final_answer` 工具吗？还是有别的信号？
   - 来源：[02-concepts/what-is-agent.md](02-concepts/what-is-agent.md)
   - 准备查：`src/smolagents/agents.py:540` `_run_stream` 的循环条件

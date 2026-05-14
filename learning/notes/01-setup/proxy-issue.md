@@ -116,6 +116,46 @@ Python 历史上没有跨平台读"系统代理"的标准 API。第三方库（`
 
 业界惯例就是认环境变量，简单粗暴。**学习阶段不要折腾这个**，`.env` 写一下完事。
 
+### 4. ⚠️ 代理软件可能只暴露 SOCKS5 没暴露 HTTP 代理
+
+不同代理软件默认暴露的协议不同：
+
+| 代理软件 | 默认 HTTP 代理 | 默认 SOCKS5 |
+|---|---|---|
+| Clash for Windows / Verge | ✅ 7890 / 7897 | ✅ 7891 |
+| v2rayN | ✅ 10809 | ✅ 10808 |
+| **ToLine** | ❌ 默认不暴露 | ✅ 2801 |
+| Trojan-Qt5 | 看版本 | ✅ 1080 |
+
+**结论**：不能假设代理软件一定提供 HTTP 代理端口。**用 `netstat -ano \| findstr 127.0.0.1 \| findstr LISTENING` 看实际监听**。
+
+#### 如果你的代理软件只有 SOCKS5
+
+`httpx` / `requests` 默认**不支持 SOCKS5**（要加包），配置流程：
+
+```bash
+# 1. 装 SOCKS 支持
+C:/workspace/smolagents/.venv/Scripts/pip install "httpx[socks]"
+```
+
+```bash
+# 2. .env 用 socks5:// 前缀
+HTTPS_PROXY=socks5://127.0.0.1:2801
+HTTP_PROXY=socks5://127.0.0.1:2801
+```
+
+```bash
+# 3. 验证（curl 原生支持 socks5）
+curl -sS -x socks5://127.0.0.1:2801 https://huggingface.co -o /dev/null -w "%{http_code} %{time_total}s\n"
+# → 200 3.1s ✅
+```
+
+```bash
+# 4. 重启 VS Code 调试 session 让新 .env 生效（.env 不会热加载）
+```
+
+> 💡 **判别 HTTP 还是 SOCKS5 的快速法**：用 curl `-x http://...:PORT` 测，如果返回 `curl: (56) CONNECT tunnel failed, response 404` 那个端口就**不是 HTTP 代理**（很可能是 SOCKS5，或者根本不是代理）—— 换成 `-x socks5://...:PORT` 再试。
+
 ---
 
 ## 当前配置（已固化）
@@ -123,10 +163,18 @@ Python 历史上没有跨平台读"系统代理"的标准 API。第三方库（`
 `C:\workspace\smolagents\.env`：
 
 ```bash
-HTTPS_PROXY=http://127.0.0.1:7897
-HTTP_PROXY=http://127.0.0.1:7897
+# 当前用 ToLine（只暴露 SOCKS5 端口 2801）
+HTTPS_PROXY=socks5://127.0.0.1:2801
+HTTP_PROXY=socks5://127.0.0.1:2801
 HF_TOKEN=hf_xxxxxxxxxxxxx
+
+# 历史配置（Clash for Windows / Verge HTTP 代理 7897）
+# HTTPS_PROXY=http://127.0.0.1:7897
+# HTTP_PROXY=http://127.0.0.1:7897
 ```
+
+**已装的额外依赖**：
+- `httpx[socks]` (引入 `socksio` 1.0.0)  ← SOCKS5 支持
 
 ---
 

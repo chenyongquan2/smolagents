@@ -140,8 +140,8 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
   - [x] **Day 1**：[memory.py](../src/smolagents/memory.py) ✅ 全部 316 行读完 —— 详见下方 [Week 2 Day 1 学习总结](#week-2--day-1-学习总结2026-05-02--2026-05-03)（10 篇笔记 + 1 个实验）
   - [x] **Day 2**：[tools.py](../src/smolagents/tools.py) 基类（Python 函数 → tool schema） ✅ —— 详见下方 [Week 2 Day 2 学习总结](#week-2-day-2-学习总结2026-05-04--2026-05-05)（8 篇笔记 + 3 个实验脚本 + 教学宪法升级）
   - [x] **Day 3**：[models.py](../src/smolagents/models.py) 基类 + InferenceClientModel（请求体拼装） ✅ —— 详见下方 [Week 2 Day 3 学习总结](#week-2-day-3-学习总结2026-05-05--2026-05-06)（11 篇笔记 + 1 个实验脚本 + 4 角色术语统一 + LLM/服务器分层心智模型）
-  - [ ] Day 4：[agents.py](../src/smolagents/agents.py) 上半（`MultiStepAgent.run()` 外循环）
-  - [ ] Day 5：[agents.py](../src/smolagents/agents.py) 下半 ⭐（`_step_stream()` 心脏）
+  - [x] **Day 4**：[agents.py](../src/smolagents/agents.py) 上半（`MultiStepAgent.run()` 外循环）✅ —— 12 篇笔记 in `day4-agents/` + stream 概念笔记 + abc 实证脚本 + 03-source/ 子目录化重构
+  - [ ] **Day 5（进行中 🚧）**：[agents.py](../src/smolagents/agents.py) 下半 ⭐（`_step_stream()` 心脏）—— 已产出 [00 骨架](notes/03-source/day5-step-stream/00-step-stream-role-overview.md) + [01 ToolCallingAgent 演出版](notes/03-source/day5-step-stream/01-toolcalling-walkthrough.md) + [02 CodeAgent 演出版](notes/03-source/day5-step-stream/02-codeagent-walkthrough.md)（3 篇全覆盖：演出 + 设计意图 + FAQ + 闭环 + 调试）。**笔记体系简化**：删 line-by-line 实现笔记，独有内容（FAQ / 类构造 / 设计意图）并入演出版。待写 03 差异对比 / 04 调试 walkthrough / self-check
   - [ ] Day 6：[local_python_executor.py](../src/smolagents/local_python_executor.py)（浏览）
   - [ ] Day 7：综合 —— 调用链图 + Week 2 总结
 - [ ] **Week 3**：自定义 Tool + 改造一个 example
