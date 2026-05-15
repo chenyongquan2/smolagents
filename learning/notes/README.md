@@ -23,7 +23,8 @@ notes/
 │   ├── day3-models/                   ← Day 3 · models.py
 │   ├── day4-agents/                   ← Day 4 · agents.py 上半（文件名带 00/01/.. 前缀，即学习顺序）
 │   ├── day5-step-stream/              ← Day 5 · agents.py 下半 ⭐（_step_stream 心脏）
-│   └── day6-executor/                 ← Day 6 · local_python_executor.py（沙箱浏览）
+│   ├── day6-executor/                 ← Day 6 · local_python_executor.py（沙箱浏览）
+│   └── day7-synthesis/                ← Day 7 · Week 2 综合调用链图
 ├── 04-experiments/                    ← 第 3 周：动手实验记录
 ├── 05-advanced/                       ← 第 4 周：进阶专题
 └── questions.md                       ← 悬而未决的问题清单
@@ -118,6 +119,9 @@ notes/
 - ⭐⭐ 00 [sandbox-role-overview.md](03-source/day6-executor/00-sandbox-role-overview.md) — **`LocalPythonExecutor` 沙箱整体角色 + 3 层防御 mental model**。一句话定调（受限 AST 解释器，不直接 exec）+ 沙箱在整个系统位置图（接 Day 5 02 第 4 幕）+ ⭐⭐ **3 层防御**：层 1 白名单 import（BASE_BUILTIN_MODULES 11 模块 + DANGEROUS_MODULES 黑名单 + check_import_authorized）/ 层 2 危险 builtins 拦截（nodunder_getattr + DANGEROUS_FUNCTIONS + safer_eval）/ 层 3 资源限制（timeout 30s + MAX_OPERATIONS + MAX_WHILE_ITERATIONS）+ BASE_PYTHON_TOOLS 默认内置工具清单 + AST 解释器入门（为什么不直接 exec）+ PythonExecutor 抽象类 vs LocalPythonExecutor / 远程 executor + 总体执行流程 5 步骨架 + ⚠️ 沙箱不是 100% 安全 4 个风险点。**Day 5 02 第 4 幕"代码助手老沙"的内部全揭秘**
 - ⭐⭐ 01 [evaluate-python-code-walkthrough.md](03-source/day6-executor/01-evaluate-python-code-walkthrough.md) — **代码助手老沙的内部：evaluate_python_code 5 幕剧本**。延续 Day 5 02 同任务（巴黎/东京/新加坡温度）+ 6 件道具（code / static_tools / custom_tools / state / authorized_imports / timeout_seconds）+ 5 幕逐个展开：① ast.parse 语法解析 ② 初始化 state（_print_outputs / _operations_count）③ ⭐ 包装 final_answer → raise FinalAnswerException ④ ⭐⭐ 遍历 AST 节点 evaluate_ast 分发 30+ evaluator（含 3 个子幕追踪 temps / max_temp / final_answer 的执行）⑤ 捕获异常返回 CodeOutput + ⭐ FinalAnswerException 继承 BaseException 而非 Exception 的细节 + 一图压缩 + 跟 Day 5 02 第 4 幕的 5 个接缝对照。**Day 5 02 第 4 幕黑盒完全打开**
 - 📝 [self-check.md](03-source/day6-executor/self-check.md) — **Day 6 自查手册：9 道题 + 详细答案 + 笔记溯源**。题量较少（vs Day 5 的 14 题）因为 LEARNING_PLAN "浏览即可 / 层次 1"。包含 ⭐⭐ Q5（FinalAnswerException 为什么用异常不用返回值 + BaseException vs Exception 细节）+ Q7（PythonExecutor 抽象类 vs 远程 executor 统一接口）+ Q9 跨层闭环（追踪 final_answer 完整路径）。**Day 6 闭合 / 7-9 题对 = 沙箱浏览到位**
+
+**Day 7 · 综合总结**：
+- ⭐⭐ [full-call-chain.md](03-source/day7-synthesis/full-call-chain.md) — **Week 2 综合：完整调用链全图**。不读新源码，把 Day 1-6 学过的内容串成 1 张图。10 节：一句话定调 → 一图压缩全景 → 顶层 run() → 外循环 _run_stream → 内循环 _step_stream 5 步 → 沙箱 evaluate_python_code 5 幕 → 零件层 Tool/Model/Memory → 8 种 yield 事件全景 → ⭐ 用 compare_agents.py CodeAgent 跑"3 城市最高温"完整剧本追踪 → Week 2 知识地图 → Day 7 验收自检（每个箭头都指出文件 + 函数 + 行号）。**LEARNING_PLAN Week 2 终极目标兑现 / Week 3 实战出问题时回头查的总入口**
 
 ### 05-advanced 进阶（暂不深究，存档备用）
 - [llm-protocols-deep-dive.md](05-advanced/llm-protocols-deep-dive.md) — LLM 协议家族深入对比 ⏸️ `deferred`，时机到了再读

@@ -143,7 +143,7 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
   - [x] **Day 4**：[agents.py](../src/smolagents/agents.py) 上半（`MultiStepAgent.run()` 外循环）✅ —— 12 篇笔记 in `day4-agents/` + stream 概念笔记 + abc 实证脚本 + 03-source/ 子目录化重构
   - [x] **Day 5**：[agents.py](../src/smolagents/agents.py) 下半 ⭐（`_step_stream()` 心脏）✅ —— 5 篇 Day 5 笔记 ([00 骨架](notes/03-source/day5-step-stream/00-step-stream-role-overview.md) / [01 ToolCallingAgent 演出版](notes/03-source/day5-step-stream/01-toolcalling-walkthrough.md) / [02 CodeAgent 演出版](notes/03-source/day5-step-stream/02-codeagent-walkthrough.md) / [03 9 维度差异对比](notes/03-source/day5-step-stream/03-impl-diff-deep-dive.md) / [04 调试操作手册](notes/03-source/day5-step-stream/04-debugging-walkthrough.md) / [self-check 14 题](notes/03-source/day5-step-stream/self-check.md)) + 概念笔记 [tools-are-python-callables](notes/02-concepts/tools-are-python-callables.md) + proxy-issue 增加 SOCKS5 配置子节。**笔记体系决策**：删 line-by-line 笔记，统一演出版（剧本 + 设计意图 + FAQ + 闭环），单子类单篇全覆盖。Day 5 验收三项全过：① 默写 5 步骨架 ② 对比两子类差异 ③ compare_agents.py 调试可走通
   - [x] **Day 6**：[local_python_executor.py](../src/smolagents/local_python_executor.py)（浏览）✅ —— 3 篇笔记 in `day6-executor/`（00 sandbox 角色 + 3 层防御 / 01 evaluate_python_code 5 幕剧本 / self-check 9 题）。按 LEARNING_PLAN "浏览即可" 控制规模 ~30 KB，不深入 30+ 个 evaluate_xxx evaluator 细节。Day 5 02 第 4 幕"代码助手老沙"黑盒完全打开。Day 6 验收：① 大致流程（字符串 → AST 解析 → 白名单检查 → 受控执行）✓ ② 解释为什么 CodeAgent 不会让 LLM 删你硬盘（3 层防御 + AST 解释器思想）✓
-  - [ ] Day 7：综合 —— 调用链图 + Week 2 总结
+  - [x] **Day 7**：综合 —— 调用链图 + Week 2 总结 ✅ —— 产出 [full-call-chain.md](notes/03-source/day7-synthesis/full-call-chain.md)（Week 2 综合调用链全图，把 Day 1-6 笔记串成 1 张图 / 10 节 / 含 compare_agents.py 完整剧本追踪）+ 本文件下方 "Week 2 学习总结" 章节（10 条核心洞察 / 2 个笔记体系决策 / 完整产出统计 / Week 3 入场提示）。**Week 2 终极目标达成**：能默画完整调用链，每个箭头都指出文件 + 函数 + 行号
 - [ ] **Week 3**：自定义 Tool + 改造一个 example
 - [ ] **Week 4**：多 agent / MCP / 沙箱 / 横向对比
 
@@ -441,3 +441,116 @@ Day 1-3 至少层次 2；Day 4-5（核心）必须层次 3；Day 6 层次 1 即�
 - 可能 1-2 篇实现细节笔记
 
 **关键方法继续不变**：先 mental model 再实现 + 单步调试 [my_first_agent.py](scripts/my_first_agent.py) 跟 `run()` 完整跑一遍 + 用 Day 3 笔记 4 角色术语描述发生的事。
+
+---
+
+## Week 2 学习总结（2026-05-02 ~ 2026-05-15）
+
+> **一句话定调**：用 14 天读完 smolagents 5 个核心源文件（memory.py / tools.py / models.py / agents.py / local_python_executor.py），产出 **40+ 篇笔记 + 6 个实验脚本 + 5 个跨日概念笔记**。**完成 Week 2 终极目标**：能默画完整调用链，每个箭头都指出文件 + 函数 + 行号。中段做出 2 个影响后续学习的笔记体系决策（子目录化重构 / 演出版模式取代 line-by-line）。
+
+### 10 条最值得记住的核心洞察
+
+1. ⭐ **5 步骨架是仓库的"心脏"**：`_step_stream` 的 ①read messages → ②call LLM → ③parse output → ④execute → ⑤yield 是 ReAct 一步的固定流程。两子类只在 ③ ④ 分歧，其他 99% 时间相同 —— Day 5 [00 mental-model](notes/03-source/day5-step-stream/00-step-stream-role-overview.md)
+2. ⭐⭐ **CodeAgent 把"算力消耗"从 LLM 端转移到 Python 端**：parallel function calling 救不了 ToolCallingAgent 的本质成本 —— JSON `tool_calls` 不能引用运行时返回值，所以"看结果做计算/决策"必然多 1 次 LLM 调用。CodeAgent 用 Python 沙箱把决策 + 控制流离线化，LLM 只过一次 —— Day 5 [03 §10](notes/03-source/day5-step-stream/03-impl-diff-deep-dive.md)
+3. ⭐ **两种 agent 调用的工具本质都是 Python callable**：差异在"谁解析参数 + 谁触发调用"。Tool 类作为"通用插槽"让 6 种异构来源（本地函数 / MCP / Gradio / HF Hub / managed_agent / LangChain）都被规范成 callable —— [tools-are-python-callables](notes/02-concepts/tools-are-python-callables.md)
+4. ⭐ **沙箱安全靠的不是黑名单，靠的是自实现 AST 解释器**：Python 解释器是"全开放"无法"半开"，所以必须把代码 ast.parse 后逐节点过自己的 evaluator —— 这是 Day 6 [00 §5 4 个方案逐个对比](notes/03-source/day6-executor/00-sandbox-role-overview.md) 揭示的安全模型根本
+5. ⭐ **8 种 yield 事件 = 三个独立维度的笛卡尔积**：生命周期阶段 × 归属主体 × 是否持久化。ToolCall vs ToolOutput 是"前置意图 vs 后置反馈"两条独立信号，分两阶段才能让 Web UI 显示 loading 状态 —— Day 4 [③'''' event-design-philosophy](notes/03-source/day4-agents/03e-stream-event-design-philosophy.md)
+6. ⭐ **持久化通道 vs 事件通道**：memory.steps 走持久化（喂 LLM + replay）；FinalAnswerStep 走 generator yield 事件（不存）。两条通道独立设计 —— Day 1 [final-answer-step](notes/03-source/day1-memory/final-answer-step.md)
+7. ⭐ **错误处理 3 层不是 try/except 嵌套**：`AgentGenerationError` 立即抛 = 实现 bug fail-fast；`AgentError` 记 step 继续 = ReAct 反馈信号让 LLM 自己改；`finally` 必发 yield 让错误事件化 —— Day 4 [③ run-mental-model](notes/03-source/day4-agents/03-run-mental-model.md)
+8. ⭐ **`FinalAnswerException` 用异常而非返回值**：让"调 final_answer 后还跟着代码"自动中断，且继承 `BaseException` 而非 `Exception` 让用户 try-except 抓不到 —— Day 6 [01 第 3 幕](notes/03-source/day6-executor/01-evaluate-python-code-walkthrough.md)
+9. ⭐ **LLM 模型 vs LLM API 服务器是两层**（Day 3 通用心智模型）：所有协议字段（stop / temperature / tools / max_tokens / response_format / tool_choice）都是给服务器看的，模型完全不知道。stop 是"被动检测"，prompt 才是"主动控制"
+10. ⭐ **4 角色术语统一**（用户 / agent 框架 / LLM API 服务器 / LLM 模型）：消除"调用方 / 客户端 / 应用层 / API / 服务器"混用的歧义。这是后续读 agents.py 的硬基础
+
+### 笔记体系决策（中段 2 个影响后续的重要决策）
+
+**决策 1 · 03-source/ 按 Day 子目录化重构**（Day 4 期间触发）：
+
+- 触发：用户反馈"39 个文件平铺，回顾时找不到学习顺序"
+- 行动：5 个子目录（python-prep / day1-memory / day2-tools / day3-models / day4-agents）+ Day 4 内部数字前缀 = 学习顺序
+- 收益：未来日子的笔记直接对号入座（day5-step-stream / day6-executor / day7-synthesis）
+- commit: `f77390b`
+
+**决策 2 · 演出版模式取代 line-by-line**（Day 5 中段触发）：
+
+- 触发：用户反馈"01 line-by-line 笔记难懂"（重蹈 Day 2 违宪覆辙）
+- 行动：删除 01 line-by-line 笔记，独有 30% 内容（设计意图 / FAQ / 类构造 / 闭环 trace）并入 01 演出版
+- 影响：Day 5 之后所有"实现细节"笔记都改用"演出版 / 剧本 + 变量快照"风格
+- commit: `d8dcd0c`（中段决策）+ `ecb41b7`（Day 5 完成）
+
+### 实战踩坑收获
+
+- **教学宪法升级** ⭐：Day 2 一次 + Day 5 一次违宪（直接 line-by-line 没 mental model）→ 笔记规范固化为"必读前置 + 一句话定调 + 演出版 + 详解"4 段结构
+- **环境踩坑固化**：ToLine 只暴露 SOCKS5 → proxy-issue.md 加 "扩展认知 4: 代理软件只暴露 SOCKS5" + httpx[socks] 配置流程
+- **Day 4 Q11 实证修正** ⭐：调试发现 `MultiStepAgent.initialize_system_prompt` 是 `@abstractmethod` 硬约束（不是软约束）→ 修订 ① 笔记 §6 + ④ 笔记 §⑧
+- **questions.md 待实证清单**：3 个 Day 5 红色推测点（arguments 类型 / memory_step.tool_calls 写回时机 / state 储物柜闭环），调试环境已通但未单点验证，保留诚实标记
+- **compare_agents.py 模型选择坑**：thinking 模型不支持 `tools` 字段会 400，必须用 Qwen2.5-72B-Instruct 而非 Qwen3-Thinking
+
+### 笔记产出（Day 1-7 累计）
+
+**03-source/ 源码笔记 7 个子目录**：
+
+- `python-prep/` 9 篇（Python 中级语法预习：class / dataclass / decorators / iterables / generators / init-subclass / abc / args-kwargs / sentinel）
+- `day1-memory/` 6 篇（memory.py 全部 316 行 + planning_demo 实证）
+- `day2-tools/` 5 篇（Tool 类 + 4 种渲染 + 2 次质检 + @tool 装饰器 + nullable）
+- `day3-models/` 6 篇 + self-check（Model + _prepare_completion_kwargs + InferenceClientModel + stop_sequences 11 节 + rate_limit/retry + params 详解）
+- `day4-agents/` 12 篇（agents.py 上半 12 篇，含包级鸟瞰 / role-overview / run mental-model + walkthrough 演出版 / event-types / stream-modes / design-philosophy / init-setup-flow / write-memory-to-messages / debugging-walkthrough）
+- `day5-step-stream/` 6 篇（agents.py 下半 ★ 心脏：role-overview + ToolCalling 演出版 + CodeAgent 演出版 + 9 维度差异对比 + 调试手册 + self-check）
+- `day6-executor/` 3 篇（local_python_executor 浏览：sandbox-role-overview + evaluate-python-code-walkthrough + self-check）
+- `day7-synthesis/` 1 篇（[full-call-chain.md](notes/03-source/day7-synthesis/full-call-chain.md) Week 2 综合调用链全图）
+
+**02-concepts/ 跨日概念笔记新增 5 篇**：
+- `llm-vs-api-server-architecture.md`（Day 3 4 角色术语模型）
+- `llm-api-server-internals.md`（Day 3 服务器 8 步流水线）
+- `chat-template-explained.md`（Day 3 模型 chat template 翻译）
+- `stream-abstraction-explained.md`（Day 4 流抽象通用 CS 概念）
+- `codeagent-how-it-works.md`（Day 4 前置认知 4 问）
+- `tools-are-python-callables.md`（Day 5 跨日工具本质洞察）
+
+**实验脚本 6 个**：
+- `planning_demo.py` / `planning_compare_demo.py`（Day 1）
+- `init_subclass_demo.py` / `abc_demo.py` / `tool_schema_trace.py`（Day 2）
+- `inference_request_trace.py`（Day 3）
+- `abc_soft_constraint_demo.py`（Day 4 Q11 实证）
+
+**仓库级产出**：[CLAUDE.md](../CLAUDE.md)（Day 2 创建）+ `proxy-issue.md` Day 6 期间扩展 SOCKS5 配置子节
+
+### 已超出原计划
+
+| 原计划要求 | 实际达到 |
+|---|---|
+| Day 1-7 按文件读完源码 | ✅ 全完成 |
+| 默画调用链每个箭头 | ✅ Day 7 [full-call-chain](notes/03-source/day7-synthesis/full-call-chain.md) 兑现 |
+| —（计划没要求） | **教学宪法升级** + **演出版笔记体系** + **4 角色术语统一** |
+| —（计划没要求） | 3 篇 02-concepts 通用 LLM 心智模型笔记（架构分层 / 服务器内部 / chat template） |
+| —（计划没要求） | Day 5 03 §10-§11 9 维度差异对比 + parallel 救不了的根本成本论证 + 能力边界设计哲学 |
+| —（计划没要求） | Day 6 §5 4 个沙箱方案对比 + SQL 注入类比（设计权衡彻底打通） |
+| —（计划没要求） | 03-source/ 子目录化重构（39 文件 → 7 子目录 + Day 4 数字前缀）|
+
+### Week 3 入场提示
+
+按 LEARNING_PLAN Week 3 计划：**自定义 Tool + 改造 example**。
+
+**已选具体题目**：
+
+1. **写一个自定义 Tool**：候选方向 ——
+   - "查天气工具"（接 OpenWeatherMap / WeatherAPI 免费 API，体现 Day 2 @tool 装饰器 + Tool 子类两种风格）
+   - "读本地文件工具"（体现 sanitize_inputs_outputs + 安全考虑）
+   - **推荐**：先做"查天气"（避免本地文件安全坑，专注 Tool 创建机制）
+
+2. **挑一个 example 改造**：
+   - 简单：[examples/text_to_sql.py](../examples/text_to_sql.py)
+   - 中等：[examples/rag.py](../examples/rag.py)
+   - 进阶：[examples/multiple_tools.py](../examples/multiple_tools.py)
+   - **推荐起点**：rag.py（结合 Day 2 自定义 Tool + Day 5 CodeAgent 实战 + 真实用例）
+
+3. **必读文档**：[docs/source/zh/tutorials/building_good_agents.md](../docs/source/zh/tutorials/building_good_agents.md) —— 实战经验
+
+**预期感受**：Week 2 已经把"为什么"想清楚了，Week 3 主要是"怎么用 + 怎么调"。出问题时**回头查 Week 1-2 笔记的频率会很高** —— 这正是笔记体系存在的目的。
+
+**关键方法**：
+- 写自定义 Tool 时回查 Day 2 [tool-class-role-overview](notes/03-source/day2-tools/tool-class-role-overview.md)
+- 出错时按 Day 4 [③ 错误处理 3 层](notes/03-source/day4-agents/03-run-mental-model.md) 定位类型
+- 调试时用 Day 5 [04 debugging-walkthrough](notes/03-source/day5-step-stream/04-debugging-walkthrough.md) 的断点对照表 / Day 4 ⑥ 操作流程
+- 不懂 LLM 行为时回查 Day 3 [llm-vs-api-server-architecture](notes/02-concepts/llm-vs-api-server-architecture.md) 4 角色术语
+
+**questions.md 3 个 Day 5 待实证点**：Week 3 实战时如果遇到对应场景顺手验证一下；不主动专门去跑（调试环境已通，需要时随时能验证）。
